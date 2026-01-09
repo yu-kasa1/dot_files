@@ -1,0 +1,19 @@
+# 基本的に全て無視
+*
+
+# .gitignoreは追跡
+!.gitignore
+
+# OS生成ファイル
+.DS_Store
+
+# dot_claude
+!dot_claude/
+!dot_claude/CLAUDE.md
+!dot_claude/settings.json
+!dot_claude/agents/
+!dot_claude/agents/**
+!dot_claude/skills/
+!dot_claude/skills/**
+!dot_claude/rules/
+!dot_claude/rules/**
