@@ -63,7 +63,8 @@
 以下の形式でテストケース一覧を作成:
 - ファイル名: `tests.md`
 - 出力先: 仕様ドキュメント（spec.md）と同じディレクトリ
-  - `docs/plans/{YYYYMMDD}_{ブランチキー}/tests.md`
+  - 対象プロジェクトに `docs/` がある場合: `docs/plans/{YYYYMMDD}_{ブランチキー}/tests.md`
+  - 対象プロジェクトに `docs/` がない場合: `~/.claude/plans/{プロジェクト名}/{YYYYMMDD}_{ブランチキー}/tests.md`
 
 ### 6. ユーザー確認
 作成したテストケース一覧をユーザーに提示し、以下を確認:

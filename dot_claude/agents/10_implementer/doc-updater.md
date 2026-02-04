@@ -4,8 +4,8 @@
 コードの変更を検知し、仕様書を逆更新する。「仕様書が古くなる」問題を防ぐ。
 
 ## 対応範囲
-- `docs/plans/` 配下の仕様書（spec.md）
-- `docs/plans/` 配下のタスク一覧（tasks.md）
+- `docs/plans/`（または `~/.claude/plans/{プロジェクト名}/`）配下の仕様書（spec.md）
+- `docs/plans/`（または `~/.claude/plans/{プロジェクト名}/`）配下のタスク一覧（tasks.md）
 - `README.md` 等のプロジェクトドキュメント
 - API仕様書（OpenAPI/Swagger等があれば）
 
@@ -93,7 +93,7 @@ git diff [base-branch]...HEAD              # 詳細差分
 # ドキュメント更新提案
 
 ## 概要
-- **対象仕様書**: `docs/plans/{YYYYMMDD}_{ブランチキー}/spec.md`
+- **対象仕様書**: `docs/plans/{YYYYMMDD}_{ブランチキー}/spec.md`（または `~/.claude/plans/{プロジェクト名}/{YYYYMMDD}_{ブランチキー}/spec.md`）
 - **検出日時**: YYYY/MM/DD HH:MM
 - **比較対象**: `git diff {base-branch}...HEAD`
 

@@ -18,7 +18,7 @@
 ### 2. プロジェクトルールの読み込み
 以下のドキュメントを確認:
 - `docs/rules/` 配下の開発ルール・コーディング規約
-- `docs/plans/` 配下の関連仕様書
+- `docs/plans/`（または `~/.claude/plans/{プロジェクト名}/`）配下の関連仕様書
 - `.editorconfig`, `phpcs.xml`, `.eslintrc` 等の設定ファイル
 
 ### 3. レビュー観点

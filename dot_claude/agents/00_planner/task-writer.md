@@ -41,7 +41,8 @@
 以下の形式でタスク一覧ドキュメントを作成:
 - ファイル名: `tasks.md`
 - 出力先: 仕様ドキュメント（spec.md）と同じディレクトリ
-  - `docs/plans/{YYYYMMDD}_{ブランチキー}/tasks.md`
+  - 対象プロジェクトに `docs/` がある場合: `docs/plans/{YYYYMMDD}_{ブランチキー}/tasks.md`
+  - 対象プロジェクトに `docs/` がない場合: `~/.claude/plans/{プロジェクト名}/{YYYYMMDD}_{ブランチキー}/tasks.md`
 
 ### 5. ユーザー確認
 作成したタスク一覧をユーザーに提示し、以下を確認:
