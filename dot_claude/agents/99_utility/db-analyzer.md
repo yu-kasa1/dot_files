@@ -16,6 +16,7 @@
 - インデックスの確認
 - マイグレーション履歴の調査
 - Eloquentモデルの分析
+- データ参照（SELECT）
 - テストデータ生成（INSERT文の出力）
 
 ## 実行手順
@@ -80,7 +81,54 @@ grep -r "belongsTo\|hasMany\|hasOne\|belongsToMany" app/Models/
 - 不明点・疑問点
 - 次のステップ（仕様策定 or 実装）
 
-### 6. テストデータ生成（オプション）
+### 6. データ参照（オプション）
+ユーザーから実データの参照依頼があった場合:
+
+#### 事前確認
+- **Dockerコンテナが起動していること**を確認
+- docker-compose.ymlからDB接続情報を読み取る
+
+#### docker-compose.ymlからの接続情報取得
+```bash
+# docker-compose.ymlの場所を特定
+find . -name "docker-compose*.yml" -o -name "compose*.yml"
+
+# DB関連の設定を確認（サービス名、環境変数）
+grep -A 20 "mysql\|mariadb\|db:" docker-compose.yml
+```
+
+確認する項目:
+- サービス名（例: `db`, `mysql`, `database`）
+- `MYSQL_DATABASE`
+- `MYSQL_USER` / `MYSQL_PASSWORD`（または`MYSQL_ROOT_PASSWORD`）
+
+#### クエリ実行
+```bash
+# 基本形式
+docker compose exec {サービス名} mysql -u {ユーザー} -p{パスワード} {DB名} -e "{SQL}"
+
+# 例: usersテーブルの先頭10件
+docker compose exec db mysql -u root -ppassword app_db -e "SELECT * FROM users LIMIT 10;"
+```
+
+#### 安全策（必須）
+- **SELECT文のみ実行可能**（INSERT/UPDATE/DELETEは禁止）
+- **LIMIT句を必須とする**（最大100件まで）
+- パスワードなどの機密カラムは出力から除外する
+- 大量データの取得は避け、必要な範囲に絞る
+
+#### 出力形式
+クエリ結果はマークダウンのテーブル形式で整理して報告:
+```markdown
+### {テーブル名} のデータ（{N}件）
+
+| id | name | status | created_at |
+|----|------|--------|------------|
+| 1 | Alice | active | 2024-01-01 |
+| 2 | Bob | inactive | 2024-01-02 |
+```
+
+### 7. テストデータ生成（オプション）
 ユーザーからテストデータ生成の依頼があった場合:
 
 #### 事前確認
@@ -115,7 +163,7 @@ INSERT INTO {テーブル名} (column1, column2, ...) VALUES
 - パスワード等のセキュリティ関連カラムには適切なダミー値を使用
 - 生成したINSERTは直接実行せず、ユーザーに提示して確認を得る
 
-### 7. 連携エージェントへの引き継ぎ
+### 8. 連携エージェントへの引き継ぎ
 調査完了後、必要に応じて以下のエージェントを呼び出す:
 - **仕様策定時**: `@spec-writer` へスキーマ情報を提供
 - **実装時**: `@coder` へテーブル構造情報を提供
