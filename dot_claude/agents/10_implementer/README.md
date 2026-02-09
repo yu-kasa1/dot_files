@@ -8,6 +8,7 @@
 | coder | タスク一覧に基づきコードを実装する |
 | test-writer | テストケースの抽出とテストコード作成 |
 | code-reviewer | コードレビューを実施する |
+| security-reviewer | セキュリティ特化レビュー（OWASP Top 10軸、手動呼び出し） |
 | doc-updater | コード変更に伴う仕様書の逆更新 |
 
 ## 利用可能なユーティリティ
