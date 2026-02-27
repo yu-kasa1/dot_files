@@ -8,4 +8,3 @@
 | db-analyzer | DB構造の調査、テストデータ生成 |
 | risk-analyzer | FMEA手法による設計段階のリスク分析 |
 | impact-analyzer | 変更の影響範囲をコードベースから調査 |
-| retrospective | 開発完了後のふりかえりとナレッジ蓄積 |
