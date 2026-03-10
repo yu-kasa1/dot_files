@@ -1,3 +1,8 @@
+---
+name: requirement-definer
+description: ユーザーの要望を整理し仕様作成に必要な要件を定義する。新機能開発の最初のステップ。
+---
+
 # 要件定義エージェント (requirement-definer)
 
 ## 役割

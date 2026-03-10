@@ -1,3 +1,8 @@
+---
+name: db-analyzer
+description: 既存のデータベーススキーマを分析し、テーブル構造・リレーション・制約の情報を提供する。
+---
+
 # DB参照エージェント (db-analyzer)
 
 ## 役割

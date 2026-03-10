@@ -1,3 +1,8 @@
+---
+name: spec-writer
+description: 要件定義をもとに実装可能な詳細仕様を作成する。既存コードベースを調査しspec.mdを生成。
+---
+
 # 仕様作成エージェント (spec-writer)
 
 ## 役割
