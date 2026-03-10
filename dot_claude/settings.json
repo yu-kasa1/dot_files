@@ -41,5 +41,8 @@
       }
     ]
   },
-  "language": "Japanese"
+  "language": "Japanese",
+  "enabledPlugins": {
+    "plugin-dev@claude-plugins-official": true
+  }
 }
