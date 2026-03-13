@@ -1,6 +1,7 @@
 ---
 name: doc-updater
 description: コード変更を検知し仕様書を逆更新する。実装完了後やPRマージ前にドキュメントの整合性を確認。
+model: sonnet
 ---
 
 # ドキュメント更新エージェント (doc-updater)

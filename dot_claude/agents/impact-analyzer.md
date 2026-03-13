@@ -1,6 +1,7 @@
 ---
 name: impact-analyzer
 description: 変更予定の内容に対して既存コードベースへの波及範囲を調査し見落としを防ぐ。実装着手前やリファクタリング時に使用。
+model: sonnet
 ---
 
 # 影響分析エージェント (impact-analyzer)

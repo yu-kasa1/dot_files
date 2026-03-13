@@ -1,6 +1,7 @@
 ---
 name: risk-analyzer
 description: 仕様書に対してFMEA（故障モード影響解析）を適用し、設計段階でリスクを網羅的に洗い出す。
+model: opus
 ---
 
 # リスク分析エージェント (risk-analyzer)

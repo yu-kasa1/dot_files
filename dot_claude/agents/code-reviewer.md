@@ -1,6 +1,7 @@
 ---
 name: code-reviewer
 description: コード品質・セキュリティ・開発ルール準拠をチェックし修正案を提示する。実装完了後のコードレビューや設計レビューに使用。
+model: opus
 ---
 
 # コードレビューエージェント (code-reviewer)

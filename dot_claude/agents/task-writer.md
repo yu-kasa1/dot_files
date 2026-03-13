@@ -1,6 +1,7 @@
 ---
 name: task-writer
 description: 仕様書をもとに実装タスクを分解・整理し、実行可能なタスク一覧(tasks.md)を作成する。
+model: opus
 ---
 
 # タスク分解エージェント (task-writer)

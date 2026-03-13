@@ -1,6 +1,7 @@
 ---
 name: test-writer
 description: 仕様書からテストケースを抽出しテストコードを作成する。正常系・異常系を網羅。
+model: sonnet
 ---
 
 # テスト作成エージェント (test-writer)

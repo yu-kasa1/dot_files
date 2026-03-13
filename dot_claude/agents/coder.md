@@ -1,6 +1,7 @@
 ---
 name: coder
 description: タスク一覧に基づき仕様通りにコードを実装する。タスクごとにユーザー承認を待つ。
+model: sonnet
 ---
 
 # 実装エージェント (coder)
