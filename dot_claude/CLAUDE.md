@@ -33,9 +33,9 @@
 
 ## セッション分割
 - よほど簡単な改修/修正でない限り、**設計フェーズと実装フェーズでセッションを分ける**こと。
-  - 設計セッション: requirement-definer → spec-writer → [risk-analyzer + code-reviewer（設計レビュー）] → task-writer
-  - 実装セッション: coder（←→ impact-analyzer） → [code-reviewer + security-reviewer + test-writer] → doc-updater → `/retrospective`
-  - `[]` 内のエージェントは並列実行可能。詳細は `@rules/agent-collaboration.md` 参照。
+  - 設計セッション: requirement-definer → spec-writer → [risk-analyzer + code-reviewer（設計レビュー） + security-reviewer（STRIDEのみ）] → task-writer → impact-analyzer
+  - 実装セッション: coder → code-reviewer → security-reviewer → doc-updater → `/retrospective`
+  - `[]` 内のエージェントは並列実行可能。test-writer は独立（ユーザー任意のタイミング）。詳細は `@rules/agent-collaboration.md` 参照。
 - セッション間の引き継ぎは仕様書配置先（`docs/plans/` または `~/.claude/plans/{プロジェクト名}/`）配下のドキュメント（spec.md, tasks.md）が担う。
 - セッション終了時は `/handover` で引き継ぎノートを生成する。spec.md / tasks.md に残らない暗黙知（捨てた選択肢、ハマりどころ等）を記録する。
 

@@ -16,6 +16,11 @@ model: sonnet
 - 基本はマイグレーション/モデルファイルベースで調査
 - Dockerコンテナ上のDBへの直接クエリは必要最小限に留める
 
+## 対応DB
+- **MySQL / MariaDB**
+- **PostgreSQL**
+- docker-compose.ymlのイメージ名から自動検出する（手順0参照）
+
 ## 対応範囲
 - テーブル構造の調査（カラム名、型、制約）
 - リレーションの分析（外部キー、Eloquentリレーション）
@@ -26,6 +31,24 @@ model: sonnet
 - テストデータ生成（INSERT文の出力）
 
 ## 実行手順
+
+### 0. DB種別の自動検出
+docker-compose.ymlからDB種別を自動検出する。以降の手順はここで特定したDB種別に基づいて実行する。
+
+```bash
+# docker-compose.ymlの場所を特定
+find . -name "docker-compose*.yml" -o -name "compose*.yml"
+
+# DBサービスのイメージを確認
+grep -E "image:.*\b(mysql|mariadb|postgres)" docker-compose.yml
+```
+
+検出ルール:
+- `mysql` または `mariadb` → **MySQL/MariaDB** として扱う
+- `postgres` → **PostgreSQL** として扱う
+- 検出できない場合 → `.env`の`DB_CONNECTION`を確認し、ユーザーに確認する
+
+検出結果は以降の全手順で参照する。レポートの「概要」セクションにもDB種別を明記すること。
 
 ### 1. 調査目的の確認
 ユーザーに調査目的を確認:
@@ -95,10 +118,10 @@ grep -r "belongsTo\|hasMany\|hasOne\|belongsToMany" app/Models/
 - docker-compose.ymlからDB接続情報を読み取る
 
 #### docker-compose.ymlからの接続情報取得
-```bash
-# docker-compose.ymlの場所を特定
-find . -name "docker-compose*.yml" -o -name "compose*.yml"
+手順0で検出したDB種別に応じて接続情報を取得する。
 
+##### MySQL / MariaDB の場合
+```bash
 # DB関連の設定を確認（サービス名、環境変数）
 grep -A 20 "mysql\|mariadb\|db:" docker-compose.yml
 ```
@@ -108,13 +131,36 @@ grep -A 20 "mysql\|mariadb\|db:" docker-compose.yml
 - `MYSQL_DATABASE`
 - `MYSQL_USER` / `MYSQL_PASSWORD`（または`MYSQL_ROOT_PASSWORD`）
 
+##### PostgreSQL の場合
+```bash
+# DB関連の設定を確認（サービス名、環境変数）
+grep -A 20 "postgres\|db:" docker-compose.yml
+```
+
+確認する項目:
+- サービス名（例: `db`, `postgres`, `database`）
+- `POSTGRES_DB`
+- `POSTGRES_USER` / `POSTGRES_PASSWORD`
+
 #### クエリ実行
+手順0で検出したDB種別に応じてコマンドを使い分ける。
+
+##### MySQL / MariaDB の場合
 ```bash
 # 基本形式
 docker compose exec {サービス名} mysql -u {ユーザー} -p{パスワード} {DB名} -e "{SQL}"
 
 # 例: usersテーブルの先頭10件
 docker compose exec db mysql -u root -ppassword app_db -e "SELECT * FROM users LIMIT 10;"
+```
+
+##### PostgreSQL の場合
+```bash
+# 基本形式
+docker compose exec {サービス名} psql -U {ユーザー} -d {DB名} -c "{SQL}"
+
+# 例: usersテーブルの先頭10件
+docker compose exec db psql -U postgres -d app_db -c "SELECT * FROM users LIMIT 10;"
 ```
 
 #### 安全策（必須）
@@ -145,7 +191,7 @@ docker compose exec db mysql -u root -ppassword app_db -e "SELECT * FROM users L
 - 関連テーブルのデータも必要か
 
 #### 生成ルール
-- MySQL Workbench等で実行可能な標準SQL形式で出力
+- 対象DB種別で実行可能な標準SQL形式で出力
 - カラム名・型・制約に準拠したリアルなダミーデータを生成
 - 外部キー制約がある場合は、親テーブルのデータを先に生成
 - NOT NULL制約のカラムには必ず値を設定
@@ -183,6 +229,7 @@ INSERT INTO {テーブル名} (column1, column2, ...) VALUES
 - **調査目的**: {仕様策定 / 実装 / 全体把握}
 - **調査日時**: YYYY/MM/DD HH:MM
 - **対象範囲**: {調査対象の説明}
+- **DB種別**: {MySQL / MariaDB / PostgreSQL}（自動検出結果）
 - **調査環境**: Dockerコンテナ上のDB
 
 ## 調査対象テーブル一覧
