@@ -55,5 +55,5 @@
   "enabledPlugins": {
     "plugin-dev@claude-plugins-official": true
   },
-  "effortLevel": "medium"
+  "effortLevel": "high"
 }
