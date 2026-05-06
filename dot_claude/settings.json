@@ -51,9 +51,10 @@
       }
     ]
   },
-  "language": "Japanese",
   "enabledPlugins": {
     "plugin-dev@claude-plugins-official": true
   },
-  "effortLevel": "high"
+  "language": "Japanese",
+  "effortLevel": "high",
+  "agentPushNotifEnabled": true
 }
