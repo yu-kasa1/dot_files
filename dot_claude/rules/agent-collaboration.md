@@ -106,6 +106,7 @@ Bash は許可されているが、`echo > file` / `sed -i` / `rm` / `mv` / `cp 
 - **プロジェクト外に仕様書がある場合**（`~/.claude/plans/{プロジェクト名}/` 等）: 親エージェント（呼び出し元）が仕様書の内容を読み取り、**サブエージェント起動時のプロンプトにインラインで全文を含めて渡す**
 - **要約・抜粋は原則禁止**。情報欠落による手戻りリスクが高いため、全文をそのまま渡す
 - **大規模仕様（800行超）で分割済みの場合**: そのエージェントのタスクに関連するファイルのみ渡す。ただし関連ファイルは全文で渡すこと
+- **プロジェクト外配置（`~/.claude/plans/` 等）の spec.md をレビュー系エージェント（code-reviewer / risk-analyzer / security-reviewer）に渡す際も、インライン全文提供を維持すること。「長くなるので §5〜§11 を省略」等の部分省略は禁止。省略すると該当セクションのレビューが飛ぶ**（cbt-p1-server CBT-541 設計 retrospective P-2 より。code-reviewer へのプロンプトで第3部を省略したため「第3部が略されているためレビュー不能」の指摘が出た）
 
 ### 渡し方のフォーマット
 ```
@@ -157,6 +158,7 @@ Bash は許可されているが、`echo > file` / `sed -i` / `rm` / `mv` / `cp 
   4. 必要に応じて追加タスクを提案し、tasks.md を更新
 - **起動プロンプトで明示すべき観点（現存データ実機確認、重要）**：
   - 「**改修対象テーブルの既存レコードを実 DB で SELECT し、設計前提と矛盾していないか検証すること**。特に admin / system / マスタ系で固定的なデータを扱うテーブル、認証 / SAML / 動的テーブル系では、過去のプロト用途で作成された既存レコード（global_id 非同値の AOG、孤児になった動的テーブル等）が残置している可能性が高い。検証結果を impact-analyzer レポートに『§ 現存データ実機確認』セクションとして必ず含める。プロジェクト外（STG/PROD）の確認は依頼ベースで OK だがローカルは impact-analyzer が直接 Bash で SELECT 実行する」（cbt-p1-server CBT-684 実装 retrospective P-1 より。設計時に admin AOG が存在しない前提で書かれていたが、実際にはプロト AOG が 2026-04-21 作成済みで残置 → 実装段階で発覚しクリーンアップ手順を急遽追加、spec.md / tasks.md 約 100 行追記の手戻り発生）
+  - 「**ライブラリバージョンアップ案件では、対象ライブラリが環境変数でカスタム config パス / 認証情報 / シークレットを解決する仕組みを持つ場合（例: `SIMPLESAMLPHP_CONFIG_DIR`, `APP_KEY` 等）、その環境変数が本番環境（AWS ECS タスク定義 / EC2 Launch Template / Terraform 変数等）に設定されているかを確認する観点を『§ 現存データ実機確認』に含めること**。未設定の場合、デプロイ後にライブラリが vendor 内デフォルト config を使い機能が完全停止するリスクがある」（cbt-p1-server CBT-541 設計 retrospective P-3 より。impact-analyzer が `SIMPLESAMLPHP_CONFIG_DIR` 未設定リスク（IMP-005）を発見するまで spec.md / tasks.md に含まれなかった）
 
 ## feasibility-writer
 実装方式・アーキテクチャに複数案がある設計フェーズで、選択肢比較と論点整理を行うエージェントです。requirement-definer / spec-writer より前段の「壁打ちフェーズ」で使用します。
@@ -185,6 +187,20 @@ Bash は許可されているが、`echo > file` / `sed -i` / `rm` / `mv` / `cp 
   - 「**現状整理の詳細・リスク分析・STRIDE 脅威分析は別ドキュメント / 別エージェントの責務**、ここでは選択肢比較に専念」
   - 「**推測で選択肢を作らない**: 外部リソース（ハッシュ提供形式、API 仕様、ライブラリ機能等）は実機確認（`curl` / `gh api` 等）してから比較表を組み立てる」（keycloak-test INFO-57 retrospective より。GitHub Releases の SHA256 提供を前提に仕様化しかけたが、実機確認で SHA1/MD5/GPG のみ提供と判明）
   - 「**手動配置・初期セットアップ依存の案を出す場合は正当化を明示**: 自動化経路（CodeDeploy 環境変数 / アーティファクト同梱 / IMDS / Parameter Store 等）が無い理由を書く。安易に『ユーザーが事前配置する前提』で済ませない」
+
+### feasibility.md のコミット要否判定
+**前提**: spec.md は feasibility.md に依存せず**自立して読める**よう書く（feasibility.md を spec.md から参照する書き方をしない）。これにより feasibility.md は「あれば便利、なくても spec.md だけで判断可能」な独立成果物として扱える。
+
+- **コミットに含める**（以下のいずれか該当）:
+  - PR レビュアー / 将来の保守者が「**なぜこの案にしたか**」を辿る必要がある
+  - 捨てた案の不採用理由が spec.md §3.2 Won't / §9.3 前提だけでは説明しきれない
+  - 大規模変更（複数ファイル / 複数フェーズ / アーキテクチャ選択を経た決定）
+- **コミットに含めない**（以下のいずれか該当）:
+  - 軽微な改修で捨てた案が単純（A 案 OR B 案で B を選んだ程度）
+  - spec.md §Won't / §前提 に根拠を書けば十分
+  - 設計確定後に読み返す予定がない
+- **コミットしない場合の運用**: feasibility.md は設計セッション中のみ作業ディレクトリに置き、spec.md 確定後は削除するか、リポジトリ外（`~/.claude/plans/{プロジェクト名}/...`）に移動する。handover ノートには経緯を残す（コミット有無に関わらず handover には残す運用）
+- **判定タイミング**: 設計フェーズ完了時（task-writer / impact-analyzer まで終わった後）に親エージェントが判断、ユーザーへ提案する
 
 ## requirement-definer
 ユーザーの要望を整理し、仕様作成に必要な要件を定義するエージェントです。
@@ -219,6 +235,8 @@ Bash は許可されているが、`echo > file` / `sed -i` / `rm` / `mv` / `cp 
   - 「**サーバー API のレスポンス種別（HTTP ステータス / エラーメッセージ / 新フィールド等）が変わる改修では、フロント側でその変化を UI に反映する必要があるかを設計段階で必ず判定すること**。判定の事前チェックとして、(1) フロントのグローバルエラーハンドリング（axios interceptor / loaderMixin / ApiAdminErrorHandler 等）が新レスポンスを扱えるか、(2) サーバー側翻訳基盤（lang/ja/messages.php 等）の整備状況、(3) フロント側のエラー表示パターン（alert / inline / toast / disabled 化等）を spec.md『§ フロント連携要否』セクションで明示する。要連携と判定された場合は MoSCoW Could 以上に『フロント側 UX 改修』タスクを必ず入れる。判定不能な場合は事前タスクで『フロント側との連携要否確認』を Phase 1 に積む」（cbt-p1-server CBT-684 実装 retrospective P-3/P-4 より。サーバー側 M-6 ガード追加だけで設計クローズした結果、画面で削除ボタン押下時に「クリックしても何も起きない」UX 不整合が実装段階で発覚。cbt-p1-client への急遽スコープ拡張 + 翻訳基盤の整備状況確認が後手に回って判断時間を浪費）
   - 「**AWS パイプライン系・自動化系の設計では『手動配置・EC2 への初期セットアップに依存する設計』を出力する前に、自動化経路を必ず検討すること**。検討対象: (1) CodeDeploy の組み込み環境変数（`APPLICATION_NAME` / `DEPLOYMENT_ID` / `DEPLOYMENT_GROUP_NAME` / `LIFECYCLE_EVENT` 等）, (2) CodeDeploy アーティファクト同梱（`appspec.yml` の `files` セクション）, (3) EC2 IMDS タグ取得, (4) SSM Parameter Store。これらで解決できない場合のみ手動配置を採用し、spec.md 内で『なぜ自動化困難か』の正当化を明示する。安易に `/sprix/etc/xxx` 等の手動配置ファイルを設計に組み込むとパイプライン化の趣旨と矛盾し、ユーザー指摘で書き直しになる」（keycloak-test INFO-57 retrospective P-1 より。`/sprix/etc/keycloak-cache-bucket` を EC2 に手動配置する設計を出力 → ユーザー指摘で `APPLICATION_NAME` 抽出方式へ書き換え）
   - 「**ハッシュ・署名・外部 API 提供形式の検証強化を仕様化する際は、対象リソースの提供形式を gh CLI / curl で実機確認すること**。security-reviewer 等から『SHA256 検証を Must に』のような指摘を受けた場合でも、推測で焼き込まず実機確認で提供形式を確定する。例: GitHub Releases は SHA256 を提供せず SHA1/MD5/GPG のみのプロジェクトもある。提供形式が想定と異なる場合は仕様修正前にユーザーに代替案（SHA1 中間案、GPG 署名検証等）を提示する」（keycloak-test INFO-57 retrospective P-3 より。SHA256 Must 格上げを仕様反映しかけたが、実機確認で Keycloak は SHA256 未提供と判明 → SHA1 中間案へ変更）
+  - 「**ライブラリバージョンアップ案件では、設定ファイル（config.php / .env / authsources.php 等）を Read する際、既知の安全でないデフォルト値（空値 / デモ用固定値 / ハードコードの推測可能な値）がないかを確認すること。特に『アップグレードで初めて実際に使われるセキュリティ制御のキーとして機能する設定値』は spec.md §セキュリティ考慮事項に必ず記載する**。例: simplesamlphp v2.3 のセッション ID ハッシュ化で `secretsalt = 'defaultsecretsalt'` が初めて HMAC キーとして機能する等」（cbt-p1-server CBT-541 設計 retrospective P-1 より。config.php を Read していたにも関わらず secretsalt のデフォルト値を見落とし、security-reviewer が SR-002 として発見するまで spec.md に含まれなかった）
+  - 「**プロジェクト固有の設定ファイル（config.php / authsources.php 等）に値を追記・変更する際は、同ファイル内の同種設定が使っているパターン（`getenv()` / `env()` / 直値 等）を必ず先に grep して統一すること**。仕様書のサンプル実装をそのままコピーすると、既存コードのパターンと乖離する場合がある。例: simplesamlphp config.php では `getenv()` が標準だが仕様書に `env()` と書かれており、そのまま実装すると Laravel 未初期化の経路でエラーになった」（cbt-p1-server CBT-541 実装 retrospective P-1 より）
 
 ## task-writer
 仕様書をもとに、実装タスクを分解・整理し、実行可能なタスク一覧を作成するエージェントです。
