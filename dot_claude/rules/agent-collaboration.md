@@ -69,6 +69,41 @@ code-reviewer 完了・修正反映後
 
 ---
 
+## フェーズ巻き戻し判断（イレギュラー時のリカバリ）
+
+設計・実装フェーズの途中で「上流フェーズの成果物に不備が発覚」したとき、どこまで戻して何を再実行するかの判定表。親エージェントは事象を検知した時点で**ユーザーに巻き戻し範囲を提案**し、独断で局所修正に走らない（局所修正で済ませると spec.md / tasks.md / impact 分析の整合が崩れ、後工程で必ず手戻る）。
+
+### 判定原則
+1. **「ドキュメントの正がコードに先行する」を維持する**: 仕様の見落としや矛盾が発覚したら、まず spec.md / tasks.md を直してから下流を再実行する。コードだけ修正して仕様未更新は禁止
+2. **再実行範囲は「変更が波及するフェーズまで」**: spec.md を直したら設計レビュー（並列3つ）も原則再実行。影響範囲が局所なら該当チェック項目のみ再判定で可（agent-collaboration.md「並列実行時の注意事項」と整合）
+3. **巻き戻し提案には根拠を添える**: 「なぜ戻す必要があるか（不備の内容・波及範囲）」と「戻さない場合のリスク」をユーザーへ提示してから判断を仰ぐ
+
+### 巻き戻し表
+
+| 発覚タイミング | 発覚事象 | 戻る先 | 再実行範囲 |
+|---|---|---|---|
+| **設計レビュー中**（risk/code/security レビュー時点） | spec 自体の重大不備（要件解釈ずれ、構造的欠落） | requirement-definer | 要件整理 → spec-writer → 設計レビュー（並列3つ） → task-writer → impact-analyzer |
+| **設計レビュー中** | spec の局所不備（特定セクションのみ） | spec-writer | spec 該当箇所修正 → 設計レビュー（並列3つ、影響項目のみ再判定可） → task-writer → impact-analyzer |
+| **task-writer 中** | spec の見落とし発覚 | spec-writer | spec → 設計レビュー（影響項目のみ） → task-writer → impact-analyzer |
+| **impact-analyzer 中** | 仕様の見落とし（影響大、複数タスクに波及） | spec-writer | spec → 設計レビュー（影響項目のみ） → task-writer → impact-analyzer |
+| **impact-analyzer 中** | タスク追加・修正のみで吸収可能（spec は無変更） | task-writer | tasks 修正 → impact-analyzer |
+| **impact-analyzer 中** | 既存コードへの想定外波及が発覚（spec/tasks は維持） | （巻き戻し不要） | tasks.md に追加タスクを追記、必要なら spec.md §Won't / §前提に注記 |
+| **coder 中**（実装直前調査含む） | 仕様矛盾・大きな見落とし | spec-writer | spec → 設計レビュー（影響項目のみ） → tasks 修正 → impact 差分のみ → coder 再開 |
+| **coder 中** | タスク粒度・順序ミスのみ（spec は維持） | task-writer | tasks 修正 → impact 差分のみ → coder 再開 |
+| **coder 中** | 軽微な仕様補足（Won't・前提の追記レベル） | （巻き戻し不要） | spec.md に注記、tasks.md に追記、coder 続行 |
+| **code-reviewer 後** | セキュリティ観点で仕様不備が発覚 | spec-writer | spec → security-reviewer（STRIDE 該当項目のみ） → tasks 修正（該当箇所のみ） → coder（該当タスクのみ） |
+| **code-reviewer 後** | コード品質指摘のみ（仕様は維持） | （巻き戻し不要） | coder で該当箇所修正 → code-reviewer 再判定（該当項目のみ） |
+| **security-reviewer 後** | OWASP 指摘で実装局所修正 | （巻き戻し不要） | coder で該当箇所修正 → security-reviewer 再判定（該当項目のみ） |
+| **doc-updater 後** | コードと spec の乖離発覚 | spec-writer or coder | 乖離の正がどちらかによる。コードが正なら spec.md を更新、spec が正ならコード修正（巻き戻しは局所） |
+
+### 適用時の注意
+- **「戻る先」は最上流の修正起点を示す**。途中フェーズの成果物（tasks.md / impact レポート）が「戻る先」を経由した結果として再生成される前提
+- **設計レビュー（並列3つ）の再実行は spec 修正箇所に応じて絞ってよい**。spec §5（処理フロー）だけ直したなら、risk-analyzer の該当フロー部分と code-reviewer の該当箇所のみ再判定で可。「全部やり直し」は避ける
+- **巻き戻しのコストが高い場合の例外**: 影響が極めて局所で、注記カバーで実害がなければ巻き戻し不要（CLAUDE.md「サブエージェント指摘の反映前チェック」と同じ判断基準）
+- **handover への記録**: 巻き戻しが発生したセッションは、`/handover` 時に「巻き戻し経緯（発覚タイミング・戻った先・再実行範囲）」を必ず記録する。次セッションが経緯を辿れるようにする
+
+---
+
 ## ドキュメント生成系サブエージェントの成果物受け取り
 
 spec-writer / task-writer / impact-analyzer など**ドキュメント生成を行うサブエージェント**および coder / doc-updater / test-writer などコード生成を行うサブエージェントは、起動プロンプトに **「成果物は親側で書き込むため、全文（または差分）をメッセージ本文で返してください。Write/Edit ツールは利用不可」** を明記すること。
@@ -106,7 +141,8 @@ Bash は許可されているが、`echo > file` / `sed -i` / `rm` / `mv` / `cp 
 - **プロジェクト外に仕様書がある場合**（`~/.claude/plans/{プロジェクト名}/` 等）: 親エージェント（呼び出し元）が仕様書の内容を読み取り、**サブエージェント起動時のプロンプトにインラインで全文を含めて渡す**
 - **要約・抜粋は原則禁止**。情報欠落による手戻りリスクが高いため、全文をそのまま渡す
 - **大規模仕様（800行超）で分割済みの場合**: そのエージェントのタスクに関連するファイルのみ渡す。ただし関連ファイルは全文で渡すこと
-- **プロジェクト外配置（`~/.claude/plans/` 等）の spec.md をレビュー系エージェント（code-reviewer / risk-analyzer / security-reviewer）に渡す際も、インライン全文提供を維持すること。「長くなるので §5〜§11 を省略」等の部分省略は禁止。省略すると該当セクションのレビューが飛ぶ**（cbt-p1-server CBT-541 設計 retrospective P-2 より。code-reviewer へのプロンプトで第3部を省略したため「第3部が略されているためレビュー不能」の指摘が出た）
+- **プロジェクト外配置（`~/.claude/plans/` 等）の spec.md をレビュー系エージェント（code-reviewer / risk-analyzer / security-reviewer）に渡す際も、インライン全文提供を維持すること。「長くなるので §5〜§11 を省略」等の部分省略は禁止。省略すると該当セクションのレビューが飛ぶ**（cbt-p1-server CBT-541 設計 retrospective P-2 より。code-reviewer へのプロンプトで第3部を省略したため「第3部が略されているためレビュー不能」の指摘が出た） [#cbt-541-design-p2]
+- **code-reviewer に渡す場合も要約禁止**: 「code-reviewer は実コードも Read するから要約で足りるだろう」との判断は危険。spec.md 内の AC や設計判断は実コードを読んでも復元できず、要約版だと既にカバー済みの観点を「未明示」と誤判定する誘発要因になる（cbt-p1-client CBT-660 設計 retrospective P-5 より。code-reviewer へ要約版を渡したため AC-13 を見落として「subjectId 格納値 AC 未明示」と誤判定された） [#cbt-660-design-p5]
 
 ### 渡し方のフォーマット
 ```
