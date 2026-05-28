@@ -65,5 +65,6 @@
   },
   "language": "Japanese",
   "effortLevel": "high",
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "remoteControlAtStartup": true
 }
