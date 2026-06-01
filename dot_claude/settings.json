@@ -1,5 +1,13 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)"
+    ],
     "deny": [
       "Bash(git commit :*)",
       "Bash(git push :*)",
@@ -11,7 +19,10 @@
       "Bash(sed -i :*)",
       "Bash(mv :*)",
       "Bash(cp -f :*)",
-      "Bash(sudo :*)"
+      "Bash(sudo :*)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Bash(cat .env*)"
     ]
   },
   "hooks": {
@@ -64,7 +75,7 @@
     "plugin-dev@claude-plugins-official": true
   },
   "language": "Japanese",
-  "effortLevel": "high",
+  "effortLevel": "xhigh",
   "agentPushNotifEnabled": true,
   "remoteControlAtStartup": true
 }

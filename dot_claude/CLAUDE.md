@@ -15,6 +15,7 @@
 - まずシンプルなアプローチから始める。明示的に求められない限り、複雑なアーキテクチャ・ファイル構造・マルチテーブル設計を提案しない。迷ったら過剰設計前に確認する。
 - ファイルの作成・削除・再構成を行う前に、計画している変更内容を説明し確認を待つ。破壊的または大規模なファイル操作を自律的に実行しない。
 - ファイルを読んで質問に答える際は、存在する/しないと主張する前に必ず Glob/Read でファイル存在を確認する。
+- ファイル内容の確認に巨大ファイル（数千行/数万字規模）を `cat` で全文ダンプしない。環境が出力を persisted-output に退避し、二度手間＋`malformed tool call` 系の parse 警告を招く。重複・存在チェックは `grep -n` でピンポイント抽出、内容確認は `Read` の offset/limit で範囲を絞る。スキル/バンドル実行（absorb・compact-knowledge 等）でルール群を走査する時に特に再発しやすい。なお `malformed` の主因は Opus 4.8（1M context）の tool_use 生成バグで、巨大ファイル丸読み・長コンテキスト・多数 MCP 接続が悪化要因（2026-06 時点の一過性問題）[#env-opus48-toolcall-p1]
 
 ## 断定する前の1段検証（共通原理）
 
@@ -29,6 +30,7 @@
 - **机上推測の段階で「主犯候補確定」「最有力候補」「サイレントデータ破壊バグ」等の強い表現を使わない**: 机上では「机上で説明可能なシナリオの一つ」「実機検証必要」等の中立表現に留め、実機検証 / 観測ログで裏付けが取れた場合のみ「確定」「主犯候補」を使う。机上推測の強表現は運営報告等で誤情報伝播のリスクあり [#prtp-804-investigate-p1]
 - **報告事象が特定文脈由来の場合、調査開始時に「報告文脈」と「仕様前提」を分離宣言**: 学校現場 / 企業 / 個人ユーザ等の特定文脈報告を受けたら、調査ドキュメント冒頭に「報告文脈 = X」「仕様前提 = 任意ユーザー（toC）/ 任意団体（toB）等」を明示。設計判断セクションには特定文脈語彙（「教員」「児童」「学校」等）を持ち込まない。UX 配慮・効果評価の判断が偏る [#prtp-804-investigate-p2]
 - **同一仮説の評価が 3 回以上揺れたら机上の限界、実機検証 / 観測網にピボット**: 主犯仮説の評価変動（最有力 → トーンダウン → 再格上げ → 否定 等）が 3 回以上起きたら「机上深掘りで精度上がる」段階を過ぎている。実機検証 / 観測ログ追加 / 報告者ヒアリングのいずれかにピボット判断を出す。机上深掘りの連続は「精度低下のサイン」と捉える [#prtp-804-investigate-p3]
+- **ランタイムUI挙動（フリーズ/ハング/遷移不能）の指摘は机上推論より先に実機の画面状態を確認**: 「画面が固まる」等の指摘は、ログ/通信フレーム/コードの机上推論を重ねる前に「実機で画面に何が出ているか」を1問で確認する。ログ・通信フレームはイベント有無は捉えるが UI 遷移（手動ナビ等）を捉えないため、机上推論が実機と乖離する [#prtp-817-review-p1]
 
 ## サブエージェント指摘の反映前チェック
 
@@ -61,8 +63,8 @@ code-reviewer / security-reviewer / impact-analyzer から「要修正」「FAIL
 
 ## セッション分割
 - よほど簡単な改修/修正でない限り、**設計フェーズと実装フェーズでセッションを分ける**こと。
-  - 設計セッション: requirement-definer → spec-writer → [risk-analyzer + code-reviewer（設計レビュー） + security-reviewer（STRIDEのみ）] → task-writer → impact-analyzer
-  - 実装セッション: coder → code-reviewer → security-reviewer → doc-updater → `/retrospective`
+  - 設計セッション: requirement-definer → spec-writer → [risk-analyzer + code-reviewer（設計レビュー） + security-reviewer（STRIDEのみ） + performance-reviewer（設計リスクのみ）] → task-writer → impact-analyzer
+  - 実装セッション: coder → code-reviewer → security-reviewer → performance-reviewer → doc-updater → `/retrospective`
   - `[]` 内のエージェントは並列実行可能。test-writer は独立（ユーザー任意のタイミング）。詳細は `@rules/agent-collaboration.md` 参照。
 - セッション間の引き継ぎは仕様書配置先（`docs/plans/` または `~/.claude/plans/{プロジェクト名}/`）配下のドキュメント（spec.md, tasks.md）が担う。
 - セッション終了時は `/handover` で引き継ぎノートを生成する。spec.md / tasks.md に残らない暗黙知（捨てた選択肢、ハマりどころ等）を記録する。
