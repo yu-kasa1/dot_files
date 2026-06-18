@@ -24,14 +24,16 @@ absorb で蓄積されたルール群（GLOBAL_MEMORY.md / pitfalls.md / CLAUDE.
 ## 検出パターン
 
 ### パターン A: 未参照 pitfalls アンカー
-`pitfalls.md` に登録されているが、CLAUDE.md / agents/*.md / rules/*.md のどこからも `[#anchor]` 形式で参照されていないエントリを検出する。
+`pitfalls.md` に登録されているが、GLOBAL_MEMORY.md / CLAUDE.md / agents/*.md / rules/*.md のどこからも `[#anchor]` 形式で参照されていないエントリを検出する。
 
 参照されていないエントリは「ルール本文に紐づかない孤立した経緯ログ」になっており、削除候補 または ルール本文への昇格候補。
+
+GLOBAL_MEMORY.md からの参照も検出対象に含める（GLOBAL_MEMORY の 1 行ルール末尾に `[#anchor]` で経緯参照を付ける運用があるため、含めないと偽陽性が出る）。
 
 検出コマンド:
 ```bash
 pf=$(grep -E '^## [a-z0-9-]+' ~/.claude/knowledge/pitfalls.md | sed 's/^## //' | awk '{print $1}' | sort -u)
-refs=$(grep -rEho '\[#[a-z0-9-]+\]' ~/.claude/CLAUDE.md ~/.claude/agents/ ~/.claude/rules/ 2>/dev/null | sed 's/\[#//;s/\]//' | sort -u)
+refs=$(grep -rEho '\[#[a-z0-9-]+\]' ~/.claude/knowledge/GLOBAL_MEMORY.md ~/.claude/CLAUDE.md ~/.claude/agents/ ~/.claude/rules/ 2>/dev/null | sed 's/\[#//;s/\]//' | sort -u)
 comm -23 <(echo "$pf") <(echo "$refs")
 ```
 
@@ -51,7 +53,7 @@ comm -23 <(echo "$pf") <(echo "$refs")
 検出は Claude が行を読んで判定する。grep で先頭一致が出るペアを優先的に拾い、内容類似性は Claude が文脈で確認する。
 
 ### パターン C: 単一 pitfalls アンカーへの複数参照
-同じ `[#anchor]` が CLAUDE.md / agents/*.md / rules/*.md で 2 箇所以上から参照されているケースを検出する。
+同じ `[#anchor]` が GLOBAL_MEMORY.md / CLAUDE.md / agents/*.md / rules/*.md で 2 箇所以上から参照されているケースを検出する。
 
 **閾値の判定**:
 - **2 箇所参照**: 参考表示のみ（意図的な複数エージェント参照のケースが多い）
@@ -61,13 +63,13 @@ comm -23 <(echo "$pf") <(echo "$refs")
 
 検出コマンド:
 ```bash
-grep -rEoh '\[#[a-z0-9-]+\]' ~/.claude/CLAUDE.md ~/.claude/agents/ ~/.claude/rules/ 2>/dev/null \
+grep -rEoh '\[#[a-z0-9-]+\]' ~/.claude/knowledge/GLOBAL_MEMORY.md ~/.claude/CLAUDE.md ~/.claude/agents/ ~/.claude/rules/ 2>/dev/null \
   | sort | uniq -c | awk '$1 > 1 {print $2 " (" $1 "回参照)"}'
 ```
 
 参照箇所の特定:
 ```bash
-grep -rn '\[#anchor-name\]' ~/.claude/CLAUDE.md ~/.claude/agents/ ~/.claude/rules/
+grep -rn '\[#anchor-name\]' ~/.claude/knowledge/GLOBAL_MEMORY.md ~/.claude/CLAUDE.md ~/.claude/agents/ ~/.claude/rules/
 ```
 
 ## 実行手順

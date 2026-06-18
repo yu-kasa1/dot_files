@@ -32,6 +32,17 @@ tools: Read, Glob, Grep, Bash
 - 極端なケース（エッジケース、境界値の極端な組み合わせ等）は対象外
 - 仕様書に明記されたシナリオを忠実にテスト化する
 
+## 必須観点
+
+### テスト実行コマンドの事前確認
+- テスト実行コマンド（PHPUnit / Jest / RSpec 等）はプロジェクト固有規約（Docker container 内実行 / host 直 / composer script 等）を `docker-compose.yml` / `Makefile` / `composer.json scripts` から事前確認する。host から直叩きすると DB 接続エラー等で時間ロスする [#cbt-669-impl-p1]
+
+### Laravel テスト実装時の落とし穴
+Laravel プロジェクトでテストコードを書く際は以下 3 点を事前確認する [#cbt-669-impl-p3]:
+1. **Mockery の型指定**: `Mockery::mock()` 単独は戻り値型エラーになる。`Mockery::mock(Target::class)` で型指定する
+2. **Facade のモック化**: `Facade::shouldNotReceive('method')` は Facade の初回モック化制約で `undefined method` になる。`Facade::shouldReceive('method')->never()` で代替する
+3. **認証識別子のオーバーライド確認**: `User::getAuthIdentifierName()` を `'global_id'` 等にオーバーライドしているプロジェクトでは `SessionGuard::id()` の戻り値が UUID。`app/Models/User.php` を事前 Read で確認し、assert 対象を `$user->id` でなく `$user->global_id` に合わせる
+
 ## 実行手順
 
 ### 1. 仕様ドキュメントの読み込み

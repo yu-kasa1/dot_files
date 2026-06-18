@@ -18,6 +18,7 @@ tools: Read, Glob, Grep, Bash
   - ファイル削除/移動/コピー: `rm` / `mv` / `cp -f`
   - Git変更系: `git commit` / `git push` / `git merge` / `git rebase` / `git reset --hard`
 - 成果物（コード・仕様書・差分）はメッセージ本文で親エージェントに返す。親側で Edit/Write を実行する
+- **コードブロック（PHP / JS / Vue / TypeScript 等）内では生の文字 `<`, `>`, `&`, `->`, `=>`, `&&` をそのまま使用すること**。HTML エンティティ化（`&lt;` / `&gt;` / `&amp;` / `-&gt;` / `=&gt;` / `&amp;&amp;`）は禁止。markdown 内コードブロック（```php / ```javascript 等）はエンティティ化不要で、親側でデコード手戻りが発生する。生成時に意図せずエンティティ化しがちなので、返送前にコードブロック内を目視確認すること
 
 ## 前提条件
 - `@spec-writer` で作成された仕様ドキュメント（`{機能名}_spec.md`）が存在すること

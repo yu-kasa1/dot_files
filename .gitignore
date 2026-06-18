@@ -19,3 +19,7 @@
 !dot_claude/rules/**
 !dot_claude/ideas/
 !dot_claude/ideas/**
+!dot_claude/workflows/
+!dot_claude/workflows/**
+!dot_claude/hooks/
+!dot_claude/hooks/**

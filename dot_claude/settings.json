@@ -26,6 +26,31 @@
     ]
   },
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/prompt-rule-inject.sh\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/bash-cat-guard.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/bash-explain-guard.sh\""
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [
@@ -41,7 +66,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "REPO=$(basename \"$PWD\") && osascript -e \"display notification \\\"[$REPO] 確認が必要です\\\" with title \\\"Claude Code\\\" sound name \\\"Ping\\\"\" && code \"$PWD\""
+            "command": "REPO=$(basename \"$PWD\") && osascript -e \"display notification \\\"[$REPO] 確認が必要です\\\" with title \\\"Claude Code\\\" sound name \\\"Ping\\\"\""
           }
         ]
       }
@@ -51,7 +76,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "REPO=$(basename \"$PWD\") && osascript -e \"display notification \\\"[$REPO] 権限の確認が必要です\\\" with title \\\"Claude Code\\\" sound name \\\"Ping\\\"\" && code \"$PWD\""
+            "command": "REPO=$(basename \"$PWD\") && osascript -e \"display notification \\\"[$REPO] 権限の確認が必要です\\\" with title \\\"Claude Code\\\" sound name \\\"Ping\\\"\""
           }
         ]
       }
@@ -61,7 +86,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "REPO=$(basename \"$PWD\") && osascript -e \"display notification \\\"[$REPO] 処理が完了しました\\\" with title \\\"Claude Code\\\" sound name \\\"Glass\\\"\" && code \"$PWD\""
+            "command": "REPO=$(basename \"$PWD\") && osascript -e \"display notification \\\"[$REPO] 処理が完了しました\\\" with title \\\"Claude Code\\\" sound name \\\"Glass\\\"\""
           }
         ]
       }
@@ -76,6 +101,8 @@
   },
   "language": "Japanese",
   "effortLevel": "xhigh",
+  "skipWorkflowUsageWarning": true,
+  "remoteControlAtStartup": true,
   "agentPushNotifEnabled": true,
-  "remoteControlAtStartup": true
+  "model": "claude-opus-4-7[1m]"
 }

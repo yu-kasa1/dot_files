@@ -14,6 +14,8 @@
 ## Eloquent
 - N+1問題やオーバーフェッチを避けること。
 - リレーション使用時は`with()`でEager Loadingを行うこと。
+- `with('relation')`の relation 名と、整形メソッド（`toArray` / `toSimpleArray` / `toResourceArray` 等）が参照する `$this->xxx` の名前一致を必ず確認する。同テーブルへの BelongsToMany を pivot フィルタ違いで複数持つモデル（`orgs()` (`wherePivot('is_enabled', 1)`) と `orgsWithDisabled()` の組等）では特に dead eager が起きやすい [#cbt-638-impl-p3]
+- N+1 観察は `DB::enableQueryLog → DB::getQueryLog → DB::flushQueryLog → DB::disableQueryLog` の 4 点セットを `try/finally` で包む方式を使う。観察範囲は `map` 等の lazy load 発火元まで try 内に取り込み、finally で disable する前に lazy load を完了させる。`DB::listen` は PHP-FPM / 長寿命プロセス環境でリスナー累積→無関係エンドポイント巻き込みのリスクがあるため request handler 内では使わない [#cbt-638-impl-p1]
 - `$fillable`を必ず定義すること。(`$guarded = []`は禁止)
 
 ## 翻訳・設定
