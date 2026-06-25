@@ -1,12 +1,12 @@
 ---
 name: compact-knowledge
-description: GLOBAL_MEMORY.md / pitfalls.md / CLAUDE.md / agents/*.md / rules/*.md を走査し、ルールの重複・未参照アンカー・統合候補を検出する。修正は実施せず候補レポートのみ出力する。週次バンドル経由（absorb直後）または「ルール圧縮」「重複検出」「pitfalls整理」「コンパクション」等の発話で起動する。
+description: GLOBAL_MEMORY.md / memory/*.md / pitfalls.md / CLAUDE.md / agents/*.md / rules/*.md を走査し、ルールの重複・未参照アンカー・統合候補を検出する。修正は実施せず候補レポートのみ出力する。週次バンドル経由（absorb直後）または「ルール圧縮」「重複検出」「pitfalls整理」「コンパクション」等の発話で起動する。
 ---
 
 # ルール群コンパクション走査 (compact-knowledge)
 
 ## 概要
-absorb で蓄積されたルール群（GLOBAL_MEMORY.md / pitfalls.md / CLAUDE.md / agents/*.md / rules/*.md）を定期的に走査し、肥大化・重複・陳腐化の兆候を検出する。
+absorb で蓄積されたルール群（GLOBAL_MEMORY.md / memory/*.md / pitfalls.md / CLAUDE.md / agents/*.md / rules/*.md）を定期的に走査し、肥大化・重複・陳腐化の兆候を検出する。
 
 **検出のみ・修正なし**。候補レポートを出力し、実際の統合・削除はユーザーが手動承認のうえ実施する。
 
@@ -15,7 +15,8 @@ absorb で蓄積されたルール群（GLOBAL_MEMORY.md / pitfalls.md / CLAUDE.
 - 「ルール圧縮」「重複ルール検出」「pitfalls 整理」「コンパクション」等の発話で単独起動
 
 ## 走査対象
-- `~/.claude/knowledge/GLOBAL_MEMORY.md`
+- `~/.claude/knowledge/GLOBAL_MEMORY.md`（鉄則 + 索引）
+- `~/.claude/knowledge/memory/*.md`（topic 別蓄積、設計/エージェント運用/AWS/トラブルシューティング/プロセス/ビルド検証）
 - `~/.claude/knowledge/pitfalls.md`
 - `~/.claude/CLAUDE.md`
 - `~/.claude/agents/*.md`
@@ -24,26 +25,27 @@ absorb で蓄積されたルール群（GLOBAL_MEMORY.md / pitfalls.md / CLAUDE.
 ## 検出パターン
 
 ### パターン A: 未参照 pitfalls アンカー
-`pitfalls.md` に登録されているが、GLOBAL_MEMORY.md / CLAUDE.md / agents/*.md / rules/*.md のどこからも `[#anchor]` 形式で参照されていないエントリを検出する。
+`pitfalls.md` に登録されているが、GLOBAL_MEMORY.md / memory/*.md / CLAUDE.md / agents/*.md / rules/*.md のどこからも `[#anchor]` 形式で参照されていないエントリを検出する。
 
 参照されていないエントリは「ルール本文に紐づかない孤立した経緯ログ」になっており、削除候補 または ルール本文への昇格候補。
 
-GLOBAL_MEMORY.md からの参照も検出対象に含める（GLOBAL_MEMORY の 1 行ルール末尾に `[#anchor]` で経緯参照を付ける運用があるため、含めないと偽陽性が出る）。
+GLOBAL_MEMORY.md / memory/*.md からの参照も検出対象に含める（鉄則・topic 知見の 1 行ルール末尾に `[#anchor]` で経緯参照を付ける運用があるため、含めないと偽陽性が出る）。
 
 検出コマンド:
 ```bash
 pf=$(grep -E '^## [a-z0-9-]+' ~/.claude/knowledge/pitfalls.md | sed 's/^## //' | awk '{print $1}' | sort -u)
-refs=$(grep -rEho '\[#[a-z0-9-]+\]' ~/.claude/knowledge/GLOBAL_MEMORY.md ~/.claude/CLAUDE.md ~/.claude/agents/ ~/.claude/rules/ 2>/dev/null | sed 's/\[#//;s/\]//' | sort -u)
+refs=$(grep -rEho '\[#[a-z0-9-]+\]' ~/.claude/knowledge/GLOBAL_MEMORY.md ~/.claude/knowledge/memory/ ~/.claude/CLAUDE.md ~/.claude/agents/ ~/.claude/rules/ 2>/dev/null | sed 's/\[#//;s/\]//' | sort -u)
 comm -23 <(echo "$pf") <(echo "$refs")
 ```
 
-### パターン B: GLOBAL_MEMORY 内の重複候補
-`GLOBAL_MEMORY.md` の同一カテゴリ内で、本文先頭の主要語が重複する行ペアを抽出する。
+### パターン B: GLOBAL_MEMORY / memory/*.md 内の重複候補
+`GLOBAL_MEMORY.md` の鉄則セクション、および `memory/*.md` 各 topic ファイル内で、本文先頭の主要語が重複する行ペアを抽出する。**topic ファイル間の横断重複（design.md と process.md に同義エントリ等）も検出対象**。
 
 完全自動判定は困難なので、以下の手順で候補を列挙する:
-1. 各カテゴリ（`## 設計`, `## エージェント運用`, `## プロセス` 等）配下の箇条書きを抽出
-2. 各行から先頭の主要キーワード（最初の名詞句、5〜10文字）を切り出す
-3. 同一カテゴリ内でキーワード重複する行ペアを列挙
+1. GLOBAL_MEMORY.md 鉄則セクションの箇条書きを抽出
+2. memory/*.md 各 topic ファイル配下の箇条書きを抽出
+3. 各行から先頭の主要キーワード（最初の名詞句、5〜10文字）を切り出す
+4. 同一ファイル内およびファイル横断でキーワード重複する行ペアを列挙
 
 **キーワード抽出例**:
 - `「spec.md は feasibility.md に依存せず…」` → キーワード `spec.md 依存`
@@ -53,7 +55,7 @@ comm -23 <(echo "$pf") <(echo "$refs")
 検出は Claude が行を読んで判定する。grep で先頭一致が出るペアを優先的に拾い、内容類似性は Claude が文脈で確認する。
 
 ### パターン C: 単一 pitfalls アンカーへの複数参照
-同じ `[#anchor]` が GLOBAL_MEMORY.md / CLAUDE.md / agents/*.md / rules/*.md で 2 箇所以上から参照されているケースを検出する。
+同じ `[#anchor]` が GLOBAL_MEMORY.md / memory/*.md / CLAUDE.md / agents/*.md / rules/*.md で 2 箇所以上から参照されているケースを検出する。
 
 **閾値の判定**:
 - **2 箇所参照**: 参考表示のみ（意図的な複数エージェント参照のケースが多い）
@@ -63,13 +65,13 @@ comm -23 <(echo "$pf") <(echo "$refs")
 
 検出コマンド:
 ```bash
-grep -rEoh '\[#[a-z0-9-]+\]' ~/.claude/knowledge/GLOBAL_MEMORY.md ~/.claude/CLAUDE.md ~/.claude/agents/ ~/.claude/rules/ 2>/dev/null \
+grep -rEoh '\[#[a-z0-9-]+\]' ~/.claude/knowledge/GLOBAL_MEMORY.md ~/.claude/knowledge/memory/ ~/.claude/CLAUDE.md ~/.claude/agents/ ~/.claude/rules/ 2>/dev/null \
   | sort | uniq -c | awk '$1 > 1 {print $2 " (" $1 "回参照)"}'
 ```
 
 参照箇所の特定:
 ```bash
-grep -rn '\[#anchor-name\]' ~/.claude/knowledge/GLOBAL_MEMORY.md ~/.claude/CLAUDE.md ~/.claude/agents/ ~/.claude/rules/
+grep -rn '\[#anchor-name\]' ~/.claude/knowledge/GLOBAL_MEMORY.md ~/.claude/knowledge/memory/ ~/.claude/CLAUDE.md ~/.claude/agents/ ~/.claude/rules/
 ```
 
 ## 実行手順

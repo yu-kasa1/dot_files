@@ -11,12 +11,24 @@ GLOBAL_MEMORY="$HOME/.claude/knowledge/GLOBAL_MEMORY.md"
 printed_any=0
 
 # 前回の引き継ぎノート（最新1件のみ）
+# `<!-- /summary -->` マーカーがある handover は冒頭の常時参照セクションのみ注入し、
+# 詳細セクション（今回やったこと/捨てた選択肢/ハマりどころ/学び等）は
+# 必要時に Read させる。マーカーがない既存 handover は全文注入で後方互換。
+# （`---` を境界に使うと本文中のセクション区切り用 `---` と衝突するため専用マーカーを採用）
 if [ -d "$HANDOVER_DIR" ]; then
   latest_handover="$(ls -1t "$HANDOVER_DIR"/*.md 2>/dev/null | head -n 1)"
   if [ -n "${latest_handover:-}" ]; then
     echo "## 前回の引き継ぎノート ($(basename "$latest_handover"))"
     echo ""
-    cat "$latest_handover"
+    if grep -q '<!-- /summary -->' "$latest_handover"; then
+      # マーカーあり: マーカー直前までを注入（常時参照セクション）
+      awk '/<!-- \/summary -->/{exit} {print}' "$latest_handover"
+      echo ""
+      echo "_詳細セクション（今回やったこと/捨てた選択肢/ハマりどころ/学び/次にやること/関連ファイル）は必要時に Read: \`$latest_handover\`_"
+    else
+      # マーカーなし: 全文注入（後方互換）
+      cat "$latest_handover"
+    fi
     echo ""
     printed_any=1
   fi

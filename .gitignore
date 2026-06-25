@@ -17,6 +17,8 @@
 !dot_claude/skills/**
 !dot_claude/rules/
 !dot_claude/rules/**
+!dot_claude/rule-snippets/
+!dot_claude/rule-snippets/**
 !dot_claude/ideas/
 !dot_claude/ideas/**
 !dot_claude/workflows/

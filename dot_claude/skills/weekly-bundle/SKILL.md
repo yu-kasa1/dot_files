@@ -20,12 +20,12 @@ description: 金曜朝に回す週次レポート4点セット（absorb → comp
 
 1. **/absorb**
    - retrospective/handoverから知見を抽出
-   - GLOBAL_MEMORY.md に反映
+   - GLOBAL_MEMORY.md（鉄則昇格）または `~/.claude/knowledge/memory/{category}.md`（topic 追記）に反映
    - 昇格判定の迷いがある知見は「保留」扱い
 
 2. **/compact-knowledge**
    - absorb 直後の状態に対してルール群を走査
-   - 未参照 pitfalls アンカー / GLOBAL_MEMORY 重複候補 / 複数参照アンカーを検出
+   - 未参照 pitfalls アンカー / GLOBAL_MEMORY・memory/*.md 重複候補 / 複数参照アンカーを検出
    - 候補レポートを `~/.claude/weekly-reports/run-log/YYYY-MM-DD-compaction.md` に出力
    - 修正は実施しない（検出のみ）
 
@@ -47,15 +47,16 @@ description: 金曜朝に回す週次レポート4点セット（absorb → comp
 
 ## /absorb
 - 実行: 成功 / 失敗
-- 昇格件数: N / 保留件数: N
+- 昇格件数: N（鉄則: N / topic: N）/ 保留件数: N
 - GLOBAL_MEMORY.md 更新: あり / なし
+- memory/*.md 更新: あり / なし（更新ファイル名）
 - エラー: （あれば）
 
 ## /compact-knowledge
 - 実行: 成功 / 失敗
 - 候補レポート: ~/.claude/weekly-reports/run-log/YYYY-MM-DD-compaction.md
 - 未参照 pitfalls アンカー: N件
-- GLOBAL_MEMORY 重複候補: N件
+- GLOBAL_MEMORY / memory/*.md 重複候補: N件
 - pitfalls 複数参照アンカー: N件
 - エラー: （あれば）
 
@@ -89,4 +90,4 @@ description: 金曜朝に回す週次レポート4点セット（absorb → comp
 - ただし **compact-knowledge は検出のみで修正なし**なので素通りでも安全
 - 各スキルでエラーが出ても止めず、次のスキルに進む。エラー内容は run-log に記録
 - 実行中の出力は最小限に。run-log を見れば結果がわかるようにする
-- ユーザー側で問題があれば事後対応（GLOBAL_MEMORYは git で巻き戻し可能、Notionトグルは手動削除）
+- ユーザー側で問題があれば事後対応（GLOBAL_MEMORY.md / memory/*.md は git で巻き戻し可能、Notionトグルは手動削除）
