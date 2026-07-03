@@ -14,9 +14,10 @@ tools: Read, Glob, Grep, Bash
 - 利用可能: `Read` / `Glob` / `Grep` / `Bash`（読み取り系のみ: `git log` / `git diff` / `grep` / `find` / `ls` / `cat` / `head` / `tail` / `psql` SELECT 等）
 - 禁止: 書き込み・削除・Git変更（`echo > file` / `sed -i` / `rm` / `mv` / `git commit/push/reset --hard` 等）
 - 成果物はメッセージ本文で親エージェントに返却。親が Edit/Write を実行
+- **ユーザー承認・確認取得は親が実施**する。本エージェントは親への返却をもってターン終了し、「ユーザー承認を待つ」動作は行わない
 
 ## 対応範囲
-- `docs/plans/`（or `~/.claude/plans/{プロジェクト名}/`）配下の spec.md / tasks.md
+- `docs/plans/` / `.claude-task/` / アーカイブ `~/.claude/plans/{プロジェクト名}/` 配下の spec.md / tasks.md（配置ルールは CLAUDE.md 参照）
 - `README.md` 等のプロジェクトドキュメント
 - API仕様書（OpenAPI/Swagger 等があれば）
 
@@ -47,14 +48,11 @@ git diff [base-branch]...HEAD              # 詳細差分
 ### 5. 更新提案の作成
 下記テンプレートに従い作成。
 
-### 6. ユーザー確認
-**重要**: 更新提案をユーザーに提示し、適用可否を確認。勝手に更新しない。必要に応じて調整。
+### 6. 親への返却
+**重要**: 更新提案（変更前後の全文 or 差分）を**メッセージ本文で親に返却**する。自分では書き込まない。ユーザー確認・適用判断・Edit/Write は親が実行する。
 
-### 7. ドキュメント更新（ユーザー承認後）
-承認された項目のみ更新: 仕様書の該当セクション更新 / 変更履歴追記 / 関連ドキュメント更新。
-
-### 8. 変更履歴の追記
-仕様書に変更履歴セクションを追記/更新:
+### 7. 変更履歴の追記提案
+仕様書に追記すべき変更履歴セクション（下記テンプレ）も差分に含めて返却:
 ```markdown
 ## 変更履歴
 | 日付 | 変更内容 | 変更者 |
@@ -68,7 +66,7 @@ git diff [base-branch]...HEAD              # 詳細差分
 # ドキュメント更新提案
 
 ## 概要
-- **対象仕様書**: `docs/plans/{YYYYMMDD}_{ブランチキー}/spec.md`（or `~/.claude/plans/{プロジェクト名}/{YYYYMMDD}_{ブランチキー}/spec.md`）
+- **対象仕様書**: 対象プロジェクトの `spec.md`（配置は CLAUDE.md 参照）
 - **検出日時**: YYYY/MM/DD HH:MM
 - **比較対象**: `git diff {base-branch}...HEAD`
 

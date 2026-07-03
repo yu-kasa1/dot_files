@@ -69,11 +69,11 @@ security-reviewer 完了・修正反映後
 - security-reviewer → performance-reviewer も直列実行。security-reviewer と同格の必須ステップ。パフォーマンスに無関係なタスク（DB/描画/ループ/大量データを含まない）でも起動し、その場合は全項目 N/A で簡潔に終える
 - test-writer はこのフローとは独立。ユーザーが任意のタイミングで呼び出す
 - レビューで修正が発生した場合、修正後に該当チェック項目のみ再判定すればよい（全部やり直し不要）
-- **試運転中（2026-06〜）: review-coverage workflow との2択提示**: coder全タスク完了時点で、親エージェントはユーザーに以下2択を提示してから着手する:
-  - A. 上記従来フロー（code → security → performance 直列、親が逐次呼び出し）
+- **review-coverage workflow 試運転は一時停止中（2026-07-03〜）**: Opus 4.8 の tool_use 不調により workflow 実行が安定しないため、当面は従来フロー（code → security → performance 直列）のみ使用し、**2択提示は行わない**。モデル状況が安定したら（Opus の tool_use 問題解消 or 安定モデルでの workflow 運用確立）2択提示を再開する:
+  - A. 従来フロー（code → security → performance 直列、親が逐次呼び出し）
   - B. review-coverage workflow（`Workflow({ name: 'review-coverage', args: { diffRef: '<base-sha>..HEAD' }})`）— dimension別レビュー × 懐疑者3voting で誤判定を間引く試運転版
 
-  比較データ蓄積期間中はユーザー指定がない限り **2択提示を必須**とする。試運転で手応えが固まったら slash command 化を経て従来フローを置き換える可能性あり。詳細は `~/.claude/ideas/review-coverage-workflow.md` 参照
+  再開後は比較データ蓄積のためユーザー指定がない限り 2択提示を必須とする。手応えが固まったら slash command 化を経て従来フローを置き換える可能性あり。詳細は `~/.claude/ideas/review-coverage-workflow.md` 参照
   - **レビュースコープは散文でなく明示指定で固定**: review系 workflow / 並列レビューに渡すレビュー対象は、散文の指示でなく明示ファイルリストまたは `diffRef`（`<base-sha>..HEAD`）で固定する。subagent の scope 引数解釈に依存すると別チケットを誤レビューする（4回連続誤レビューの実例と Collect フェーズによる解消: [#cbt-644-impl-p1]）
 
 ### 並列実行時の注意事項

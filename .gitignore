@@ -21,6 +21,9 @@
 !dot_claude/rule-snippets/**
 !dot_claude/ideas/
 !dot_claude/ideas/**
+# ideas/ 配下の個別除外（社内情報・内部監査レポート）
+dot_claude/ideas/oplus-shift-gws-migration.md
+dot_claude/ideas/dotclaude-audit-*.md
 !dot_claude/workflows/
 !dot_claude/workflows/**
 !dot_claude/hooks/

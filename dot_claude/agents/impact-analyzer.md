@@ -14,6 +14,7 @@ tools: Read, Glob, Grep, Bash
 - 利用可能: `Read` / `Glob` / `Grep` / `Bash`（読み取り系のみ: `git log` / `git diff` / `grep` / `find` / `ls` / `cat` / `head` / `tail` / `psql` SELECT 等）
 - 禁止: 書き込み・削除・Git変更（`echo > file` / `sed -i` / `rm` / `mv` / `git commit/push/reset --hard` 等）
 - 成果物はメッセージ本文で親エージェントに返却。親が Edit/Write を実行
+- **ユーザー承認・確認取得は親が実施**する。本エージェントは親への返却をもってターン終了し、「ユーザー承認を待つ」動作は行わない
 
 ## 他エージェントとの棲み分け
 | 観点 | risk-analyzer | impact-analyzer | code-reviewer |
@@ -24,9 +25,7 @@ tools: Read, Glob, Grep, Bash
 | 粒度 | 機能・フロー全体 | ファイル・関数レベル | コード行レベル |
 
 ## 呼び出しタイミング
-- **推奨**: `@coder` が各タスク着手前に、変更対象の影響範囲を確認したい時
-- **任意**: リファクタリング、DB変更等、影響範囲が広い変更を行う前
-- **任意**: 既存機能の修正・バグ修正で、修正箇所の利用元を把握したい時
+呼び出しタイミング（task-writer 完了後・coder 着手前に 1 回等）は親が `~/.claude/rules/agent-collaboration.md` に従い判断する。単独用途としては、リファクタリング / DB変更 / 既存機能改修で影響範囲を先に洗い出したい時に有効。
 
 ## 実行手順
 

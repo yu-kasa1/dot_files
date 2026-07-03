@@ -1,6 +1,6 @@
 ---
 name: absorb
-description: retrospective/handoverからプロジェクト横断の知見を抽出し、GLOBAL_MEMORY.md（鉄則のみ）または memory/ 配下のトピックファイルに吸い上げる。
+description: retrospective/handoverからプロジェクト横断の知見を抽出し、GLOBAL_MEMORY.md（鉄則のみ）または memory/ 配下のトピックファイルに吸い上げる。「知見の吸い上げ」「absorb」「ナレッジ棚卸し」「knowledge 集約」等の発話、または週次金曜（weekly-bundle 経由が主用途）で起動。`/absorb` でも呼び出し可。
 ---
 
 # 知見の吸い上げ (absorb)

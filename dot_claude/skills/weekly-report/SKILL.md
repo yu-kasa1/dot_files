@@ -1,6 +1,6 @@
 ---
 name: weekly-report
-description: retrospectiveとhandoverを集約し、週次レポートを生成する。Claude活用の成果と限界を組織報告用にまとめる。
+description: retrospectiveとhandoverを集約し、週次レポートを生成する。Claude活用の成果と限界を組織報告用にまとめる。「週報」「weekly-report」「週次レポート」「週の振り返り」等の発話、または金曜午前中に起動（主用途は weekly-bundle 経由。Notion 日報から起こす場合は notion-weekly-report を使う）。`/weekly-report` でも呼び出し可。
 ---
 
 # 週次レポート生成 (weekly-report)

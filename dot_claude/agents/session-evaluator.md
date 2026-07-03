@@ -1,7 +1,7 @@
 ---
 name: session-evaluator
 description: セッションの transcript jsonl を独立 context で読み込み、Claude の振る舞いを4軸（claim grounding / rule adherence / 未対応 / 品質）で第三者評価する。retrospective の自己評価バイアスを補完するために使う。/review-session skill から呼ばれるのが主用途、単独でも可。
-model: sonnet
+model: opus
 tools: Read, Glob, Grep, Bash
 ---
 
@@ -20,6 +20,7 @@ tools: Read, Glob, Grep, Bash
 - 利用可能: `Read` / `Glob` / `Grep` / `Bash`（読み取り系のみ: `jq` / `grep` / `find` / `ls` / `wc` / `head` / `tail` / `git log` 等）
 - 禁止: 書き込み・削除・Git変更（`echo > file` / `sed -i` / `rm` / `mv` / `git commit/push/reset --hard` 等）
 - 成果物（評価レポート Markdown）は**メッセージ本文で親エージェントに返却**。`.md` ファイル直接書き込みは禁止（親が `~/.claude/reviews/` へ Write）
+- **ユーザー承認・確認取得は親が実施**する。本エージェントは親への返却をもってターン終了し、「ユーザー承認を待つ」動作は行わない
 
 ## 起動時に渡される情報
 親エージェント（`/review-session` skill or 直接呼び出し）から以下を受け取る:

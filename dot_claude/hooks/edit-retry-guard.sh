@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
-# edit-retry-guard.sh — Edit 連続失敗ガード hook
+# edit-retry-guard.sh — Edit 連続失敗ガード hook (PostToolUse only)
 #
-# PreToolUse(Edit): 同一 file_path への直近 30 分以内の Edit 失敗カウントが 3 以上なら
-#   stderr に警告注入（exit 0、block しない）。
 # PostToolUse(Edit): tool_response の error 状態を見て、成功なら 0 リセット / 失敗ならインクリメント。
+#   失敗後のカウントが 2 以上（＝2 連続失敗）なら hookSpecificOutput.additionalContext で警告注入。
 #
 # 状態ファイル: /tmp/claude-edit-fails.json
 # 状態形式: {"<file_path>": {"count": N, "last_update": <unix_timestamp>}}
 # 30 分以上古いエントリは期限切れとして無視（実質リセット）。
 #
+# 履歴: 元は PreToolUse でも警告注入していたが、PreToolUse hook 出力がモデルに届かないことが
+#   実測で判明した (2026-07-03 監査)。PostToolUse 側で additionalContext 経由で警告するよう統合。
+#
 # 由来: review-session 試運転で発覚した RA-001
-#   （compact-knowledge SKILL.md への Edit 8 連続呼び出し、CLAUDE.md「3 連続失敗で即別経路にピボット」未遵守）。
+#   （compact-knowledge SKILL.md への Edit 8 連続呼び出し、CLAUDE.md「2 連続失敗で即別経路にピボット」未遵守）。
 #   構造的に塞ぐための補助 hook。
 
 set -u
@@ -51,11 +53,8 @@ read_count_and_age() {
 }
 
 if [ "$event" = "PreToolUse" ]; then
-  read_count_and_age
-  if [ "$count" -ge 3 ]; then
-    base="$(basename "$file_path")"
-    echo "[harness] Edit 連続失敗 ${count} 回目 (file: ${base})。CLAUDE.md「3 連続失敗で即別経路にピボット」に従い、Write 全体書き直し or Bash heredoc 追記に切替を検討してください [#cbt-622-recon-p3]" >&2
-  fi
+  # PreToolUse は無音素通し（PreToolUse hook 出力はモデルに届かないため）。
+  # 警告は PostToolUse 側で additionalContext 経由に統合済み。
   exit 0
 fi
 
@@ -72,6 +71,17 @@ if [ "$event" = "PostToolUse" ]; then
     tmp="$(mktemp)"
     jq --arg fp "$file_path" --argjson c "$new_count" --argjson t "$now_ts" \
       '.[$fp] = {count: $c, last_update: $t}' "$STATE_FILE" > "$tmp" && mv "$tmp" "$STATE_FILE"
+    # 2 連続失敗以降は additionalContext で警告
+    if [ "$new_count" -ge 2 ]; then
+      base="$(basename "$file_path")"
+      msg="[harness] Edit 連続失敗 ${new_count} 回目 (file: ${base})。CLAUDE.md「2 連続失敗で即別経路にピボット」に従い、Write 全体書き直し or Bash heredoc 追記に切替を検討してください [#cbt-622-recon-p3]"
+      jq -cn --arg m "$msg" '{
+        hookSpecificOutput: {
+          hookEventName: "PostToolUse",
+          additionalContext: $m
+        }
+      }'
+    fi
   else
     # 成功: 該当エントリを削除
     tmp="$(mktemp)"

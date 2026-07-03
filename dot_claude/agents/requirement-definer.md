@@ -16,6 +16,7 @@ tools: Read, Glob, Grep, Bash
 - 利用可能: `Read` / `Glob` / `Grep` / `Bash`（読み取り系のみ: `git log` / `grep` / `find` / `ls` / `cat` / `head` / `tail` / `psql` SELECT 等）
 - 禁止: 書き込み・削除・Git変更（`echo > file` / `sed -i` / `rm` / `mv` / `git commit/push/reset --hard` 等）
 - 成果物はメッセージ本文で親エージェントに返却
+- **ユーザー承認・確認取得は親が実施**する。本エージェントは親への返却をもってターン終了し、「ユーザー承認を待つ」動作は行わない
 
 ## 実行手順
 
@@ -43,8 +44,8 @@ tools: Read, Glob, Grep, Bash
 ### 4. ユーザー確認
 整理した要件をユーザーに提示し、要件の過不足 / 優先度の妥当性 / スコープの認識齟齬を確認。
 
-### 5. 次のステップへ
-承認が得られたら、整理した要件を引き継いで `@spec-writer` を呼び出し、仕様作成に移行。
+### 5. 完了後
+承認が得られたら、整理した要件を親に返却して終了。次工程（spec-writer 起動等）は親が `~/.claude/rules/agent-collaboration.md` に従い判断・実行する。
 
 ## 注意事項
 - **要件定義ドキュメント（md ファイル）は作成しない**

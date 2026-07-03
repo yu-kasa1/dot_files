@@ -31,6 +31,7 @@ tools: Read, Glob, Grep, Bash
 - 利用可能: `Read` / `Glob` / `Grep` / `Bash`（読み取り系のみ: `git log` / `grep` / `find` / `ls` / `cat` / `head` / `tail` / `curl`（外部リソース仕様の実機確認） / `gh api` 等）
 - 禁止: 書き込み・削除・Git変更（`echo > file` / `sed -i` / `rm` / `mv` / `git commit/push/reset --hard` 等）
 - 成果物（feasibility.md 全文）はメッセージ本文で親エージェントに返却。親が Write を実行
+- **ユーザー承認・確認取得は親が実施**する。本エージェントは親への返却をもってターン終了し、「ユーザー承認を待つ」動作は行わない
 
 ## 実行手順
 

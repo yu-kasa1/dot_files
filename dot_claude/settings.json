@@ -26,17 +26,16 @@
       "Read(//Users/y.kasai/dot_files/**)"
     ],
     "deny": [
-      "Bash(git commit :*)",
-      "Bash(git push :*)",
-      "Bash(git merge :*)",
-      "Bash(git rebase :*)",
-      "Bash(git reset --hard :*)",
-      "Bash(rm -rf /*)",
-      "Bash(rm :*)",
-      "Bash(sed -i :*)",
-      "Bash(mv :*)",
-      "Bash(cp -f :*)",
-      "Bash(sudo :*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git merge:*)",
+      "Bash(git rebase:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(rm:*)",
+      "Bash(sed -i:*)",
+      "Bash(mv:*)",
+      "Bash(cp -f:*)",
+      "Bash(sudo:*)",
       "Read(.env)",
       "Read(.env.*)",
       "Read(**/.env)",
@@ -44,7 +43,7 @@
       "Bash(cat .env*)"
     ]
   },
-  "model": "claude-fable-5[1m]",
+  "model": "claude-opus-4-7[1m]",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -71,9 +70,19 @@
           {
             "type": "command",
             "command": "bash \"$HOME/.claude/hooks/bash-env-guard.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/bash-secret-file-guard.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/bash-db-dml-guard.sh\""
           }
         ]
-      },
+      }
+    ],
+    "PostToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
@@ -83,17 +92,6 @@
           }
         ]
       },
-      {
-        "matcher": "Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$HOME/.claude/hooks/edit-retry-guard.sh\""
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
       {
         "matcher": "Edit",
         "hooks": [

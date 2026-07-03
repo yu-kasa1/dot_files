@@ -1,6 +1,6 @@
 ---
 name: monthly-report
-description: 週次レポートとretrospectiveを集約し、月次サマリーを生成する。成果の棚卸しと半期・年次レポートの素材として使用。
+description: 週次レポートとretrospectiveを集約し、月次サマリーを生成する。成果の棚卸しと半期・年次レポートの素材として使用。「月次レポート」「monthly-report」「月次サマリ」「月次ふりかえり」等の発話、または月末最終営業日に起動。`/monthly-report` でも呼び出し可。
 ---
 
 # 月次レポート生成 (monthly-report)

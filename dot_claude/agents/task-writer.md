@@ -14,6 +14,7 @@ tools: Read, Glob, Grep, Bash
 - 利用可能: `Read` / `Glob` / `Grep` / `Bash`（読み取り系のみ: `git log` / `git diff` / `grep` / `find` / `ls` / `cat` / `head` / `tail` / `psql` SELECT 等）
 - 禁止: 書き込み・削除・Git変更（`echo > file` / `sed -i` / `rm` / `mv` / `git commit/push/reset --hard` 等）
 - 成果物はメッセージ本文で親エージェントに返却。親が Edit/Write を実行
+- **ユーザー承認・確認取得は親が実施**する。本エージェントは親への返却をもってターン終了し、「ユーザー承認を待つ」動作は行わない
 - **コードブロック内では生記号 `<` `>` `&` `->` `=>` `&&` をそのまま使用**。HTML エンティティ化禁止。返送前に目視確認
 
 ## 前提条件
@@ -44,18 +45,13 @@ spec.md を読み込み、機能一覧 / API一覧 / DB変更一覧（第1部）
 
 ### 4. タスク一覧の作成
 - ファイル名: `tasks.md`
-- 出力先: spec.md と同じディレクトリ
-  - `docs/` あり: `docs/plans/{YYYYMMDD}_{ブランチキー}/tasks.md`
-  - `docs/` なし: `~/.claude/plans/{プロジェクト名}/{YYYYMMDD}_{ブランチキー}/tasks.md`
+- 出力先: spec.md と同じディレクトリ（配置ルールは CLAUDE.md「仕様書・タスク書の配置ルール」参照）
 
 ### 5. ユーザー確認
 タスク粒度の妥当性 / 依存関係漏れ / 優先順位の妥当性を確認。
 
-### 6. 設計レビュー
-承認後、`@code-reviewer` で仕様・タスクの設計レビュー実施。
-
-### 7. 実装開始
-設計レビュー完了後、ユーザーが実装を希望すれば `@coder` で実装開始。仕様設計のみが目的なら本ステップをスキップ。
+### 6. 完了後
+承認後は親に返却して終了。次工程（impact-analyzer → coder 等）は親が `~/.claude/rules/agent-collaboration.md` に従い判断・実行する。
 
 ## 出力テンプレート
 
@@ -119,7 +115,7 @@ Phase 1: インフラ/環境設定 → Phase 2: バックエンド基盤 → Pha
 Phase 1 → 2 → 3 → 4 → 5 の順次実行。Phase 内で並行実行可能なタスクは依存関係図で明示。
 
 ## 備考
-- 各タスク完了後は `@code-reviewer` でコードレビュー推奨
+- 全タスク完了後のレビューフローは親が `~/.claude/rules/agent-collaboration.md` に従い実行（code → security → performance 直列 or review-coverage workflow）
 - 不明点は spec.md 参照、それでも不明ならユーザーに確認
 ```
 

@@ -1,6 +1,6 @@
 ---
 name: retrospective
-description: 開発完了後にふりかえりを実施し、Keep/Problem/Tryで学びを構造化して記録する。
+description: 開発完了後にふりかえりを実施し、Keep/Problem/Tryで学びを構造化して記録する。「ふりかえり」「retrospective」「KPT」「レトロ」「反省会」等の発話、またはフェーズ完了時（設計完了・実装完了・PR マージ後）に起動。`/retrospective` でも呼び出し可。
 ---
 
 # ふりかえり (retrospective)

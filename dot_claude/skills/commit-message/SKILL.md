@@ -1,6 +1,6 @@
 ---
 name: commit-message
-description: コミットメッセージを自動生成する。git diff や変更内容からConventional Commits形式のメッセージを提案する。
+description: コミットメッセージを自動生成する。git diff や変更内容からConventional Commits形式のメッセージを提案する。「コミットメッセージ」「commit message」「コミット文」「メッセージ考えて」等の発話、または `git commit` 直前で起動。`/commit-message` でも呼び出し可。
 ---
 
 # コミットメッセージ生成

@@ -14,6 +14,7 @@ tools: Read, Glob, Grep, Bash
 - 利用可能: `Read` / `Glob` / `Grep` / `Bash`（読み取り系のみ: `git log` / `git diff` / `grep` / `find` / `ls` / `cat` / `head` / `tail` / `psql` SELECT 等）
 - 禁止: 書き込み・削除・Git変更（`echo > file` / `sed -i` / `rm` / `mv` / `git commit/push/reset --hard` 等）
 - 成果物はメッセージ本文で親エージェントに返却。親が Edit/Write を実行
+- **ユーザー承認・確認取得は親が実施**する。本エージェントは親への返却をもってターン終了し、「ユーザー承認を待つ」動作は行わない
 
 ## code-reviewer / security-reviewer との棲み分け
 - **code-reviewer**: 品質・規約・設計の総合レビュー。**パフォーマンス観点は持たない**（performance-reviewer に一本化済み）
@@ -37,7 +38,7 @@ tools: Read, Glob, Grep, Bash
 - 実装コード対象、**3.2〜3.4（PF-DB / PF-AP / PF-FE）全項目**深掘り
 - code-reviewer → security-reviewer の後に直列で**必ず実施**（実装フェーズ必須、security-reviewer と同格）
 - DB/クエリ・描画・ループ・大量データを一切含まないタスクは全項目 N/A で簡潔に終えてよい
-- **デフォルト: 差分レビュー**（`git diff` のみ）、明示的「全体レビュー」依頼時のみフルレビュー
+- **デフォルト: 差分レビュー**（`git diff <merge-base>..HEAD` の変更差分のみ、素の `git diff` は空を返すので使わない。親からの diffRef 指定があればそれに従う）、明示的「全体レビュー」依頼時のみフルレビュー
 
 ## 実行手順
 
@@ -47,7 +48,7 @@ tools: Read, Glob, Grep, Bash
 ### 2. プロジェクトルールの読み込み
 - `docs/rules/` 配下（言語別: Laravel Eager Loading、Vue computed、React useMemo 等）
 - `~/.claude/rule-snippets/development-rule-{laravel,vue,react,javascript,typescript}.md` のパフォーマンス観点
-- `docs/plans/`（or `~/.claude/plans/{プロジェクト名}/`）配下の関連仕様書
+- 関連仕様書（配置は CLAUDE.md「仕様書・タスク書の配置ルール」参照）
 
 ### 3. チェックリスト判定
 
