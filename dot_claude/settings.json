@@ -5,8 +5,25 @@
       "Bash(rg:*)",
       "Bash(find:*)",
       "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(sort:*)",
+      "Bash(uniq:*)",
+      "Bash(awk:*)",
+      "Bash(tree:*)",
+      "Bash(diff:*)",
+      "Bash(jq:*)",
       "Bash(git diff:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(git status:*)",
+      "Bash(git show:*)",
+      "Bash(git grep:*)",
+      "Bash(git blame:*)",
+      "Bash(git branch:*)",
+      "Read(//Users/y.kasai/develop/**)",
+      "Read(//Users/y.kasai/dot_files/**)"
     ],
     "deny": [
       "Bash(git commit :*)",
@@ -22,9 +39,12 @@
       "Bash(sudo :*)",
       "Read(.env)",
       "Read(.env.*)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
       "Bash(cat .env*)"
     ]
   },
+  "model": "claude-fable-5[1m]",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -47,6 +67,10 @@
           {
             "type": "command",
             "command": "bash \"$HOME/.claude/hooks/bash-explain-guard.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/bash-env-guard.sh\""
           }
         ]
       },
@@ -130,8 +154,8 @@
   },
   "language": "Japanese",
   "effortLevel": "xhigh",
+  "tui": "fullscreen",
   "skipWorkflowUsageWarning": true,
   "remoteControlAtStartup": true,
-  "agentPushNotifEnabled": true,
-  "model": "claude-opus-4-7[1m]"
+  "agentPushNotifEnabled": true
 }

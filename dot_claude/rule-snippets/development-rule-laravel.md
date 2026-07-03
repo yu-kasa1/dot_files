@@ -10,6 +10,7 @@
 - DB操作はModelまたはRepositoryクラスで行う。(ControllerやServiceで直接行わない)
     - DB操作ロジックをModelに記載するかRepositoryに記載するかは既存実装を参考に判断する。
 - FormRequestでバリデーションを行う。
+- FormRequest の `field.*` バリデーションルールは array の **value** に適用される (key ではない)。例: `weak_keys.* => ['string', 'max:10']` は value が string であることを要求する。key の長さ・形式を検証したい場合は Custom rule (`function($attr, $value, $fail) { foreach (array_keys($value) as $k) if (strlen($k) > 10) $fail(...) }`) で実装する。バリデーションルール追加時は境界値 4 ケース (正規通過 / 上限超過 / 型違反 / 範囲外) を必ず curl/script で実機確認する [#prtp-834-impl-p3]
 
 ## Eloquent
 - N+1問題やオーバーフェッチを避けること。

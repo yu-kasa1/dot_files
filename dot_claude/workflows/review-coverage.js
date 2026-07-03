@@ -79,10 +79,18 @@ const CHANGESET_SCHEMA = {
 //              - all      : ベース以降の全変更（コミット済み + 未コミット + 新規）
 //   diffRef  : committed / all のベース指定（既定 'HEAD~1..HEAD'）
 //   repoPath : 別リポジトリをレビューする場合の絶対パス（cross-repo）
+//   paths    : レビュー対象を絞る pathspec（配列 or 文字列）。巨大ブランチを機能単位で
+//              分割レビューするために git diff の対象ディレクトリ/ファイルを限定する
 
 const scope    = args?.scope || 'committed'
 const diffRef  = args?.diffRef || 'HEAD~1..HEAD'
 const repoPath = args?.repoPath || null
+
+// paths は配列で受け、空なら全体。pathspec は `-- <paths>` 形式で各 git コマンド末尾に連結する。
+// 注意: `--name-only` は `--` より前に置かないと pathspec 扱いされて無効化されるため、
+// diff と name-only でコマンドを分けて持つ（後者は --name-only を -- の前に固定）。
+const paths    = Array.isArray(args?.paths) ? args.paths : (args?.paths ? [args.paths] : [])
+const pathSpec = paths.length ? ` -- ${paths.join(' ')}` : ''
 
 // cross-repo: repoPath があれば全 git を `git -C <path>` 化し、Read も <path> 配下の絶対パスに寄せる
 const gitC = repoPath ? `git -C ${repoPath}` : 'git'
@@ -92,11 +100,12 @@ const baseRef = diffRef.split(/\.\.\.?/)[0] || 'HEAD'
 
 // scope ごとの実行コマンド（前段の diff 取得エージェントに「この通り実行せよ」と渡す）
 // listUntracked: 未追跡ファイルを収集する scope のみ設定（committed / staged は対象外 → null）
+const pathLabel = paths.length ? ` / 対象: ${paths.join(' ')}` : ''
 const SCOPE_COMMANDS = {
-  committed: { diff: `${gitC} diff ${diffRef}`, label: `コミット済み差分（${diffRef}）`, listUntracked: null },
-  staged:    { diff: `${gitC} diff --staged`, label: 'ステージ済みの未コミット変更', listUntracked: null },
-  working:   { diff: `${gitC} diff HEAD`, label: '作業ツリーの全未コミット変更（staged + unstaged + 新規）', listUntracked: `${gitC} ls-files --others --exclude-standard` },
-  all:       { diff: `${gitC} diff ${baseRef}`, label: `ベース以降の全変更（${baseRef} → 作業ツリー、未コミット含む）`, listUntracked: `${gitC} ls-files --others --exclude-standard` },
+  committed: { diff: `${gitC} diff ${diffRef}${pathSpec}`, nameOnly: `${gitC} diff ${diffRef} --name-only${pathSpec}`, label: `コミット済み差分（${diffRef}${pathLabel}）`, listUntracked: null },
+  staged:    { diff: `${gitC} diff --staged${pathSpec}`, nameOnly: `${gitC} diff --staged --name-only${pathSpec}`, label: `ステージ済みの未コミット変更${pathLabel}`, listUntracked: null },
+  working:   { diff: `${gitC} diff HEAD${pathSpec}`, nameOnly: `${gitC} diff HEAD --name-only${pathSpec}`, label: `作業ツリーの全未コミット変更（staged + unstaged + 新規）${pathLabel}`, listUntracked: `${gitC} ls-files --others --exclude-standard${pathSpec}` },
+  all:       { diff: `${gitC} diff ${baseRef}${pathSpec}`, nameOnly: `${gitC} diff ${baseRef} --name-only${pathSpec}`, label: `ベース以降の全変更（${baseRef} → 作業ツリー、未コミット含む）${pathLabel}`, listUntracked: `${gitC} ls-files --others --exclude-standard${pathSpec}` },
 }
 
 // 未知の scope はサイレントに committed へ落とさず明示する（cf. 本ファイル TODO[recall-5]「サイレント・キャップ禁止」）
@@ -128,7 +137,7 @@ const collectPrompt = `あなたは diff 取得専用です。レビューや良
 
 実行すること（この通りに。git merge-base / 別ブランチとの比較 / fetch は禁止）:
 1. 差分を取得: \`${cmds.diff}\`
-2. 変更ファイル一覧: \`${cmds.diff} --name-only\`
+2. 変更ファイル一覧: \`${cmds.nameOnly}\`
 ${cmds.listUntracked
   ? `3. 未追跡(新規)ファイル一覧: \`${cmds.listUntracked}\`\n   → 一覧の各ファイルを Read ツールで全文取得（cat ではなく Read を使う）`
   : '（この scope では未追跡ファイルの収集は不要。untrackedFiles は空配列で返す）'}
