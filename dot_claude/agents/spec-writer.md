@@ -36,6 +36,12 @@ tools: Read, Glob, Grep, Bash
 2. **i18n機構とロケールファイル実パス**: i18n 使用時、ロケールディレクトリ実パスを Glob で確認（推測禁止）。対応言語と `fallbackLng` の設定位置も確認
 3. **バレルエクスポート / モジュール公開規約**: `pages/index.ts` 等のバレル有無、既存 import パターン（バレル経由 vs 直接パス）、新規追加時のバレル更新要否を spec に明記
 4. **SAML / Auth / session を触る場合の session driver**: `config/session.php` の `driver` 設定と各環境（local/STG/本番）の `SESSION_DRIVER` 環境変数を 1 分確認。デフォルト `database` 前提で進めると `redis` / `file` 環境で payload 取り違えが起きる。spec.md §前提に明記 [#cbt-669-design-p3]
+5. **メジャー/複数バージョン段階更新（Laravel/Symfony/PHP 等）の場合**: spec.md 着手**前**に scratchpad で `composer update --dry-run`（`config.platform` エミュレート）を回し、依存解決の実可否・実際の解決バージョン・付随制約（advisory / conflict）を確認して spec §3.1 相当に転記する。「余力があれば」の位置づけにしない。手法は verify-rules.md「メジャー/複数バージョン段階更新の設計フェーズ」節参照 [#cbt-940-design-p1]
+6. **多 Step 計画の後段 spec は draft ステータス + 見直しチェックリスト付きで作成する**: 段階更新・多段リリース等で複数 Step の計画を先読みして spec を書く場合、着手する Step より後段の spec は次の構造にする:
+   - 冒頭に「**ステータス: 仮（draft）**。前 Step 完了時に §末尾の見直しポイントを消化して確定させてから着手する」を明記
+   - 破壊的変更／注意事項の表内で「**調査済み**」と「**未走査**」を明示的に区別（未検証項目を確定事項のように書かない）
+   - 末尾に「**前 Step 完了時の見直しポイント**」チェックリスト（`- [ ]` 形式）を配置。前 Step で判明した情報・変わった前提を反映するトリガーにする
+   - 目的: 「早すぎる確定」を仕組みで防ぐ / 中間報告での断定粒度が過剰になるのを抑える / 前 Step の学びを吸収せず盲進するのを防ぐ
 
 #### データベース構造の調査（必要時）
 DB変更を伴う場合、関連既存テーブル構造 / 既存リレーションパターン / 命名規則・インデックス慣例の確認が必要な旨を親に報告し、db-analyzer の起動要否を判断してもらう。
@@ -198,3 +204,4 @@ DB変更を伴う場合、関連既存テーブル構造 / 既存リレーショ
 - **参考実装に方式を揃える設計はトリガー経路まで転記**: 既存実装に方式を揃える設計では、変更内容（何を）だけでなく実行トリガー（watch/mounted/event 等の「いつ」）まで読み取り spec に明記 [#cbt-644-b1-impl-p1]
 - **既存データ前提を AC/設計に置く時は前提が崩れる生成経路を grep 確認**: AC や設計の前提（例: checkedClasses は当年度担当に属する）を置く時、前提が崩れるデータ生成経路（import / batch / 年度更新 / 外部連携）を grep で1つ確認し、崩れるなら AC か Won't に「前提外データの扱い」を明記 [#cbt-644-b1-impl-p2]
 - **Eloquent eager loading の relation 名一致確認**: `with('relation')` 設計時、relation 名と整形メソッド（`toArray` / `toSimpleArray` / `toResourceArray`）が参照する `$this->xxx` の名前一致を確認。同テーブルへの BelongsToMany を pivot フィルタ違いで複数持つモデル（`orgs()` と `orgsWithDisabled()` 等）では dead eager が起きやすい。不一致なら `with` 側を整形メソッド側に揃える [#cbt-638-impl-p3]
+- **Backend API 変更時の response ラッパー実コード確認必須**: spec の差分イメージを生成する前に、変更対象関数の return 文および response ラッパー（`respondSuccess()` / `respondJson()` / `respond_with` 等プロジェクト固有ヘルパー）の実コードを Read で確認し、既存 envelope（`{success:true, data:{...}}` 等）を維持する形で差分イメージを書く。汎用的な `response()->json($data)` パターンで書くと、プロジェクト固有 envelope を破壊し呼び出し元（他サービス経由の後段消費 / フロントの `response.data.data` 参照等）で undefined 参照 → 機能全滅につながる。設計レビューでは検出しにくく、impact-analyzer で発覚するケースが多い [#prtp-849-design-p1]

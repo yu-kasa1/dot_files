@@ -1,4 +1,14 @@
 {
+  "env": {
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_LOGS_EXPORTER": "otlp",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://127.0.0.1:4318",
+    "OTEL_METRIC_EXPORT_INTERVAL": "60000",
+    "OTEL_LOGS_EXPORT_INTERVAL": "5000",
+    "OTEL_RESOURCE_ATTRIBUTES": "user.email=y.kasai,instance.id=MBL562N.local"
+  },
   "permissions": {
     "allow": [
       "Bash(grep:*)",
@@ -31,6 +41,7 @@
       "Bash(git merge:*)",
       "Bash(git rebase:*)",
       "Bash(git reset --hard:*)",
+      "Bash(git -*)",
       "Bash(rm:*)",
       "Bash(sed -i:*)",
       "Bash(mv:*)",
