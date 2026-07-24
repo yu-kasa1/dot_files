@@ -26,6 +26,7 @@ absorb で蓄積されたルール群（GLOBAL_MEMORY.md / memory/*.md / pitfall
 - `~/.claude/CLAUDE.md`
 - `~/.claude/agents/*.md`
 - `~/.claude/rules/*.md`
+- `~/.claude/rule-snippets/*.md`（言語別ルール、Laravel/Vue/React/TypeScript/JavaScript 等の `[#anchor]` 参照あり）
 
 ## 検出パターン
 
@@ -50,7 +51,8 @@ refs=$(grep -rEho '\[#[a-z0-9-]+[^]]*\]' \
   ~/.claude/knowledge/ssg-checklist.md \
   ~/.claude/CLAUDE.md \
   ~/.claude/agents/ \
-  ~/.claude/rules/ 2>/dev/null \
+  ~/.claude/rules/ \
+  ~/.claude/rule-snippets/ 2>/dev/null \
   | grep -oE '#[a-z0-9-]+' | sed 's/^#//' | sort -u)
 comm -23 <(echo "$pf") <(echo "$refs")
 ```
@@ -93,7 +95,8 @@ grep -rEoh '\[#[a-z0-9-]+[^]]*\]' \
   ~/.claude/knowledge/ssg-checklist.md \
   ~/.claude/CLAUDE.md \
   ~/.claude/agents/ \
-  ~/.claude/rules/ 2>/dev/null \
+  ~/.claude/rules/ \
+  ~/.claude/rule-snippets/ 2>/dev/null \
   | grep -oE '#[a-z0-9-]+' \
   | sort | uniq -c | awk '$1 > 1 {print $2 " (" $1 "回参照)"}'
 ```
